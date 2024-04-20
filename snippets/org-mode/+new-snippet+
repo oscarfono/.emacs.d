@@ -1,0 +1,10 @@
+# -*- mode: snippet -*-
+# name: newemacspkg
+# key: new
+# --
+;;; packagename.el --- Configure default locale -*- lexical-binding: t -*-
+;;; Commentary:
+;;; Code:
+
+(provide 'packagename)
+;;; packagename.el ends here

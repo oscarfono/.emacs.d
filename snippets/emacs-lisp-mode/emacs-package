@@ -1,0 +1,30 @@
+# -*- mode: snippet -*-
+# name: emacs-package
+# key: ep
+# --
+;;
+;; Package-Requires: ()
+;;
+;; Package Name: $1
+;;
+;; Author: $2
+
+(defgroup $3 nil
+  "${4}")
+(autoload 'turn-on-$5-mode "$1" nil t)
+
+;;;###autoload
+(define-minor-mode $5-mode
+  "${6}"
+  :init-value nil
+  :lighter "${7}"
+  :keymap `((${8})"
+           )
+  :group $3
+  (if ${9}
+      (progn
+        ${10}
+        )))
+
+(provide '$1)
+;;; ${1}_autoloads.el ends here

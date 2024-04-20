@@ -1,0 +1,2 @@
+# Generated file.  Will be overwritten without warning.
+#+INCLUDE: "/home/sod/scm/github/contrib/emacs-reveal/oer-reveal/org/config-de.org"

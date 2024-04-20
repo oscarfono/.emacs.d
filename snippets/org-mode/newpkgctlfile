@@ -1,0 +1,13 @@
+# -*- mode: snippet -*-
+# name: newpkgctlfile
+# key: newpkgctlfile
+# --
+Package:
+Version: 1.0
+Section: custom
+Priority: optional
+Architecture: all
+Essential: no
+Installed-Size: 1024
+Maintainer: baaash
+Description:

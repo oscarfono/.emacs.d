@@ -1,0 +1,1938 @@
+
+#+TITLE: Emacs Configuration File
+
+* First things First
+#+begin_src elisp :tangle sod.el
+  ;;; sod.el --- Custom EMACS Configuration
+  ;;  ========================================
+
+  ;;; Commentary:
+  ;;  ========================================
+  ;;  An EMACS configuration generated from org-mode
+
+  ;;; Code:
+  ;;  ========================================
+
+#+end_src
+
+#+begin_src elisp :tangle sod.el
+  (require 'org-macs)
+#+end_src
+
+**** Diminishing and delighting minor modes
+
+"delight is invoked with the :delight keyword, which is passed a minor mode symbol, a replacement string or quoted mode-line data (in which case the minor mode symbol is guessed to be the package name with "-mode" appended at the end), both of these, or several lists of both. If no arguments are provided, the default mode name is hidden completely."
+
+#+begin_src elisp :tangle sod.el
+
+  (use-package delight)
+
+#+end_src
+
+** Shortcut to quickly find and edit this file
+
+#+begin_src elisp :tangle sod.el
+
+  (defun edit-config ()
+    "Edit custom EMACS configuration file. "
+    (interactive)
+    (find-file "~/.emacs.d/sod.org"))
+
+  (global-set-key (kbd "C-c I") 'edit-config)
+
+#+end_src
+
+
+** Bug Hunting and Tracking
+#+begin_src elisp :tangle sod.el
+
+  (use-package bug-hunter)
+
+#+end_src
+
+** Garbage Collection
+
+#+begin_src elisp :tangle sod.el
+
+  (setq gc-cons-threshold 10000000)
+
+  ;; Restore after startup
+  (add-hook 'after-init-hook
+            (lambda ()
+              (setq gc-cons-threshold 1000000)
+              (message "gc-cons-threshold restored to %S"
+                       gc-cons-threshold)))
+
+#+end_src
+
+** Errors
+
+#+begin_src elisp
+
+  ;; backtrace on error
+  (setq debug-on-error t)
+
+  ;; increase eval-expression-print-length
+  (setq eval-expression-print-length 1000
+       eval-expression-print-level 10)
+
+#+end_src
+
+** Notifications
+
+Replace annoying bell with visible-bell
+
+#+begin_src elisp :tangle sod.el
+
+  (setq visible-bell t)
+
+#+end_src
+
+** Encoding
+
+#+begin_src elisp :tangle sod.el
+
+  ;; all about the utf-8 yo
+  (setq locale-coding-system 'utf-8)
+  (set-terminal-coding-system 'utf-8)
+  (set-keyboard-coding-system 'utf-8)
+  (set-selection-coding-system 'utf-8)
+  (prefer-coding-system 'utf-8)
+  (set-language-environment 'utf-8)
+  (set-default-coding-systems 'utf-8)
+  (set-buffer-multibyte 't)
+
+
+#+end_src
+
+** File Management
+To keep the user's home and the =~/.emacs.d= folder as clean as possible, I
+follow the [[https://specifications.freedesktop.org/basedir-spec/basedir-spec-latest.html][XDG base directory specification]].
+
+GNU Emacs will not create the appropriate folders if they do not
+exist. Therefore, it is necessary to create them yourself:
+
+#+begin_example bash
+
+     mkdir ~/.cache/emacs ~/.local/share/emacs/
+
+#+end_example
+
+*NOTE:* you can find out more by going to my [[https://github.com/techquila/dotfiles][dotfiles]].
+
+#+begin_src elisp :tangle sod.el
+
+  (defvar xdg-bin (getenv "XDG_BIN_HOME")
+    "The XDG bin base directory.")
+
+  (defvar xdg-cache (getenv "XDG_CACHE_HOME")
+    "The XDG cache base directory.")
+
+  (defvar xdg-config (getenv "XDG_CONFIG_HOME")
+    "The XDG config base directory.")
+
+  (defvar xdg-data (getenv "XDG_DATA_HOME")
+    "The XDG data base directory.")
+
+  (defvar xdg-lib (getenv "XDG_LIB_HOME")
+    "The XDG lib base directory.")
+
+#+end_src
+
+*** set load path
+#+begin_src elisp :tangle sod.el
+
+  (add-to-list 'load-path (expand-file-name "~/scm/gitlab/baaash/elisp"))
+
+#+end_src
+
+** Backups
+
+bastardised from [[https://stackoverflow.com/questions/151945/how-do-i-control-how-emacs-makes-backup-files][this stackoverflow post]]
+
+*** Set backup directory and sane defaults.
+
+#+begin_src elisp :tangle sod.el
+
+  (defvar --backup-directory (concat user-emacs-directory "backups"))
+  (if (not (file-exists-p --backup-directory))
+      (make-directory --backup-directory t))
+  (setq backup-directory-alist `(("." . ,--backup-directory)))
+  (setq make-backup-files nil             ; backup of a file the first time it is saved. ; edit: privacy concern
+        backup-by-copying t               ; don't clobber symlinks
+        version-control t                 ; version numbers for backup files
+        vc-make-backup-files t            ; backup versioned files, which Emacs does not do by default (you don't commit on every save, right?)
+        delete-old-versions t             ; delete excess backup files silently
+        delete-by-moving-to-trash t
+        kept-old-versions 2               ; oldest versions to keep when a new numbered backup is made (default: 2)
+        kept-new-versions 10              ; newest versions to keep when a new numbered backup is made (default: 2)
+        auto-save-default nil             ; auto-save every buffer that visits a file ; edit: privacy concern
+        auto-save-timeout 20              ; number of seconds idle time before auto-save (default: 30)
+        auto-save-interval 200            ; number of keystrokes between auto-saves (default: 300)
+        auto-save-file-name-transforms '((".*" "~/.emacs.d/auto-save-list/" t)))
+
+#+end_src
+
+*** per save and per session backups
+
+#+begin_src elisp :tangle sod.el
+
+  ;; Default and per-save backups go here:
+  (setq backup-directory-alist '(("" . "~/.emacs.d/backups/per-save")))
+
+  (defun force-backup-of-buffer ()
+    "Make a special per session backup at the first save of each EMACS session."
+    (when (not buffer-backed-up)
+      ;; Override the default parameters for per-session backups.
+      (let ((backup-directory-alist '(("" . "~/.emacs.d/backups/per-session")))
+            (kept-new-versions 3))
+        (backup-buffer)))
+    ;; Make a "per save" backup on each save.  The first save results in
+    ;; both a per-session and a per-save backup, to keep the numbering
+    ;; of per-save backups consistent.
+    (let ((buffer-backed-up nil))
+      (backup-buffer)))
+
+  (add-hook 'before-save-hook  'force-backup-of-buffer)
+
+#+end_src
+
+*** Stop lock files being created
+
+#+begin_src elisp :tangle sod.el
+
+  (setq create-lockfiles nil)
+
+#+end_src
+
+** Shell
+
+*** Environment Management
+
+#+begin_src elisp :tangle sod.el
+
+  (use-package exec-path-from-shell
+    :config
+    (exec-path-from-shell-initialize))
+
+#+end_src
+
+*** Terminal Emulation with [[https://www.emacswiki.org/emacs/MultiTerm][multi-term]]
+
+Multiple concurrent terminal buffers are the only way to roll.  To start one just simply 'Control-Meta-SPACEBAR'.
+
+#+begin_src elisp :tangle sod.el
+
+  (use-package multi-term
+    :bind ("C-M-SPC" . multi-term))
+  (setq multi-term-program "/bin/bash")
+  (setq term-char-mode t)
+  (setq multi-term-term-name "xterm-256color")   ; Set the TERM variable
+  (setq multi-term-internal-escape-Char "C-c")
+
+
+
+#+end_src
+
+** TLS
+#+begin_src elisp :tangle sod.el
+
+  (require 'gnutls)
+
+#+end_src
+
+
+** Syntax Highlighting
+
+Activate syntax highlighting globally
+
+#+begin_src elisp :tangle sod.el
+
+  (global-font-lock-mode 1)
+
+#+end_src
+
+** Emacs Custom temp file
+
+#+begin_src elisp :tangle sod.el
+
+  (setq custom-file (make-temp-file "emacs-custom"))
+
+#+end_src
+
+** Whitespace
+
+*** Delete trailing whitespace
+
+#+begin_src elisp :tangle sod.el
+
+  (add-hook 'before-save-hook 'delete-trailing-whitespace)
+
+#+end_src
+
+** Indentation
+
+#+begin_src elisp :tangle sod.el
+
+  (setq-default indent-tabs-mode nil)
+
+#+end_src
+
+*** aggressive-indent-mode
+#+begin_src elisp :tangle sod.el
+
+  (use-package aggressive-indent)
+  (global-aggressive-indent-mode 1)
+  (add-to-list 'aggressive-indent-excluded-modes 'html-mode)
+
+#+end_src
+
+** Line wrap
+#+begin_src elisp :tangle sod.el
+  (global-visual-line-mode 1)
+#+end_src
+
+* Personalisation
+** Default Name and Email
+
+#+begin_src elisp :tangle sod.el
+
+  (setq user-full-name "Cooper Oscarfono"
+        user-mail-address "cooper@oscarfono.com")
+
+#+end_src
+
+** Default Directory
+
+#+begin_src elisp :tangle sod.el
+
+  (setq default-directory "~/scm/github/oscarfono/")
+
+#+end_src
+** Encryption
+*** GPG Agent
+
+Use an agent to manage GPG between shell sessions.
+
+#+begin_src elisp :tangle sod.el
+
+  (setq epg-gpg-program "/usr/bin/gpg2")
+
+#+end_src
+
+*** [[https://www.emacswiki.org/emacs/EasyPG][EasyPG]] to encrypt/decrypt files with a .gpg extension
+Add the following line to the top of the document to be encrypted and save the file with a .gpg extension.
+
+#+begin_example
+
+  # -*- mode:org; epa-file-encrypt-to: ("bleat@baaa.sh") -*-
+
+#+end_example
+
+#+begin_src elisp :tangle sod.el
+
+  (require 'epa-file)
+  (epa-file-enable)
+
+#+end_src
+** Authentication
+*** Auth Source
+I have a non-world readable file named /.authoinfo.gpg / within my home
+directory where I store my authentication details for the various
+services I need to authenticate to.  ERC and Org2Blog need these credentials to operate.
+
+#+begin_src elisp :tangle sod.el
+
+  (setq auth-source-debug t)
+  (setq auth-sources
+        '((:source "~/.authinfo.gpg")))
+
+#+end_src
+
+** ERC
+#+begin_src elisp :tangle sod.el
+  (defun start-erc ()
+    "Start ERC and load erc-config.el."
+    (interactive)
+    (require 'erc)
+    (load "erc-config.el"))
+
+  (global-set-key (kbd "C-c e") 'start-erc)
+#+end_src
+
+** [[http://orgmode.org/][Org-mode]]
+*** global settings:
+
+**** set global key-bindings for org-mode features
+
+#+begin_src elisp :tangle sod.el
+
+  (define-key global-map "\C-cl" 'org-store-link)
+
+#+end_src
+
+**** set headlines to be collapsed on open
+#+begin_src elisp :tangle sod.el
+
+  (setq org-startup-folded t)
+
+#+end_src
+
+**** skeleton setup for org generated web pages
+#+begin_src elisp :tangle sod.el
+
+
+  (define-skeleton web-skeleton
+    "Header info for a web pages generated from org file."
+    "\n "
+    "#+TITLE: " str "\n\n"
+    "#+DESCRIPTION: " str "\n"
+    "#+SETUPFILE:" str "\n"
+    "#+OPTIONS: num:nil ^:{} \n"
+    "#+INCLUDE: './components/header.org' \n"
+    "#+INCLUDE: './components/footer.org' \n")
+
+  (global-set-key [C-S-f2] 'web-skeleton)
+
+#+end_src
+
+**** skeleton for blog article
+#+begin_src elisp :tangle sod.el
+
+  (define-skeleton blog-skeleton
+     "Header info for a blog file."
+     "\n "
+     "#+TITLE: " str "\n\n"
+     "#+DATE: " (current-time-string) "\n\n"
+     "#+AUTHOR: Cooper Oscarfono \n\n")
+
+   (global-set-key [C-S-f3] 'blog-skeleton)
+
+#+end_src
+
+**** skeleton setup for org files
+#+begin_src elisp :tangle sod.el
+
+  (define-skeleton org-skeleton
+    "Header info for a org file."
+    "\n "
+    "#+TITLE: " str "\n"
+    "#+AUTHOR: Cooper Oscarfono \n"
+    "#+EMAIL:  cooper@oscarfono.com \n")
+
+  (global-set-key [C-S-f4] 'org-skeleton)
+
+#+end_src
+
+**** skeleton setup for academic writing
+#+begin_src elisp :tangle sod.el
+
+  (define-skeleton apa-skeleton
+    "Header info for apa referneced docs generated from org files"
+    "\n "
+    "#+TITLE: " str " \n"
+    "#+OPTIONS: title:nil toc:nil H:4 author:nil date:nil TeX:t LaTeX:t \\n:t ^:nil \n"
+    "#+EXPORT_SELECT_TAGS: export \n"
+    "#+EXPORT_EXCLUDE_TAGS: noexport \n"
+    "#+INCLUDE: './preamble.org' \n"
+    "#+INCLUDE: './images/' \n"
+    )
+  (global-set-key [C-S-f5] 'apa-skeleton)
+
+#+end_src
+
+**** skeleton setup for letter writing
+#+begin_src elisp :tangle sod.el
+
+  (define-skeleton ltr-skeleton
+    "Latex PDF generated from org files"
+"\n"
+"#+LATEX_CLASS_OPTIONS: [a4paper,10pt] \n"
+"#+LATEX_HEADER: \\setlength{\\parskip}{1em} \\setlength{\\parindent}{0pt} \n"
+"#+LATEX_HEADER_EXTRA: \\pagenumbering{gobble} \n"
+"#+OPTIONS: toc:nil \n"
+"\n"
+"PO Box 362, \n"
+"Queenstown 9348 \n"
+"\n"
+"Dear sir/madam, \n"
+"\n"
+"_Re:_ \n"
+"\n"
+"Warm regards, \n"
+"\n"
+"#+ATTR_LATEX: :center nil :width 5cm \n"
+"[[file:~/src/private/id/sodsig-001.png]] \n"
+"\n"
+"Cooper Oscarfono \n" )
+  (global-set-key [C-S-f6] 'ltr-skeleton)
+
+#+end_src
+
+**** clock-in
+
+#+begin_src elisp :tangle sod.el
+
+  (setq org-clock-persist 'history)
+  (org-clock-persistence-insinuate)
+
+#+end_src
+
+
+*** TODO's
+
+**** set file and priorities
+
+I like to have 5 levels of todo:
+
+- [#A] = tasks that have to be done today, or that are scheduled for today
+
+- [#B] = tasks that can wait until tomorrow, or are scheduled to be done tomorrow
+
+- [#C] = tasks that need to be done by the end of the week, or are scheduled to be done within the week
+
+- [#D] = tasks that need to be done by the end of the month, or are scheduled to be done within the month
+
+- [#E} = tasks that have no deadline set
+
+  #+begin_src elisp :tangle sod.el
+
+    ;;file to save todo items
+    (setq org-agenda-files (list "~/src/org/todo.org"))
+
+    ;;set priority range from A to E with default as A
+    (setq org-highest-priority ?A)
+    (setq org-lowest-priority ?E)
+    (setq org-default-priority ?A)
+
+  #+end_src
+
+**** set *TODO* sequence
+
+When TODO keywords are used as workflow states, you might want to keep track of when a state change occurred and maybe take a note about this change. You can either record just a timestamp, or a time-stamped note for a change. These records will be inserted after the headline as an itemized list, newest first1. When taking a lot of notes, you might want to get the notes out of the way into a drawer (see Drawers). Customize org-log-into-drawer to get this behavior—the recommended drawer for this is called LOGBOOK2. You can also overrule the setting of this variable for a subtree by setting a LOG_INTO_DRAWER property.
+
+Since it is normally too much to record a note for every state, Org expects configuration on a per-keyword basis for this. This is by adding special markers ‘!’ (for a timestamp) or ‘@’ (for a with timestamp) in parentheses after each keyword. For example, the setting:
+
+#+begin_src elisp :tangle sod.el
+
+  (setq org-todo-keywords
+        '((sequence "TODO(t)" " NEXT(n/)" " >|< IN-PROGRESS(i!)" "⚠ WAIT(w@/!)" "|" "DONE(d!)" "✘ KILL(k!)" "➰ PASS(p@/!)" )))
+
+#+end_src
+
+**** Log TODO done time
+
+#+begin_src elisp :tangle sod.el
+
+  (setq org-log-done 'time)
+
+#+end_src
+
+**** Set line wrap
+
+#+begin_src elisp :tangle sod.el
+
+  (setq org-startup-align-all-tables t)
+
+#+end_src
+
+*** [[http://orgmode.org/manual/Agenda-Views.html][org-agenda]]
+
+#+begin_src elisp :tangle sod.el
+
+  (org-agenda nil "a") ;; present org-agenda on emacs startup
+
+  (define-key global-map "\C-ca" 'org-agenda)
+
+  ;; Emacs contains the calendar and diary by Edward M. Reingold.  The
+  ;; calendar displays a three-month calendar with holidays from
+  ;; different countries and cultures. The diary allows you to keep
+  ;; track of anniversaries, lunar phases, sunrise/set, recurrent
+  ;; appointments (weekly, monthly) and more. In this way, it is quite
+  ;; complementary to Org. It can be very useful to combine output from
+  ;; Org with the diary.
+
+  ;; In order to include entries from the Emacs diary into Org mode's
+  ;; agenda, you only need to customize the variable
+  (setq org-agenda-include-diary t)
+
+  ;;open agenda in current window
+  (setq org-agenda-window-setup (quote current-window))
+  ;;warn me of any deadlines in next 14 days
+  (setq org-deadline-warning-days 14)
+  ;;show me tasks scheduled or due in next fortnight
+  (setq org-agenda-span (quote fortnight))
+  ;;don't show tasks as scheduled if they are already shown as a deadline
+  (setq org-agenda-skip-scheduled-if-deadline-is-shown t)
+  ;;don't give awarning colour to tasks with impending deadlines
+  ;;if they are scheduled to be done
+  (setq org-agenda-skip-deadline-prewarning-if-scheduled (quote pre-scheduled))
+  ;;don't show tasks that are scheduled or have deadlines in the
+  ;;normal todo list
+  (setq org-agenda-todo-ignore-deadlines (quote all))
+  (setq org-agenda-todo-ignore-scheduled (quote all))
+  ;;sort tasks in order of when they are due and then by priority
+  (setq org-agenda-sorting-strategy
+        (quote
+         ((agenda deadline-up priority-down)
+          (todo priority-down category-keep)
+          (tags priority-down category-keep)
+          (search category-keep))))
+
+#+end_src
+
+*** [[http://orgmode.org/manual/Capture.html#Capture][org-capture]]
+
+Capture lets you quickly store notes with little interruption of your work flow.
+
+#+begin_src elisp :tangle sod.el
+
+  (define-key global-map "\C-cc" 'org-capture)
+
+#+end_src
+
+*** [[http://orgmode.org/manual/Capture-templates.html#Capture-templates][org-capture-templates]]
+Things I want to capture:
+- tasks
+- projects and time-tracking
+- expenses
+- birthdays, anniversaries, or important dates
+- contacts
+- new words I learn and their definitions
+- new commands I learn, with documentation and examples on how to use
+- grocery list
+- wishlist
+- blog post ideas
+- video content ideas
+- lyrical ideas
+- songs i want to learn to play
+- artists or albums to check out
+- books I want to read or check out
+- video content/movies/documentaries/cinema to check out
+- new languages, tools, or technologies to check out
+
+#+begin_src elisp :tangle sod.el
+
+  (defvar my/org-contacts-template "**  %^{contact}
+      :PROPERTIES:
+        :EMAIL: %(org-contacts-template-email)
+        :PHONE: %^{XXX-XXX-XXXX}
+        :ADDRESS: %^{street name. city, postcode NZ}
+        :BIRTHDAY: %^{dd-mm-yyyy}t
+        :NOTE: %^{NOTE}
+      :END:" "Template for org-contacts.")
+
+  (defvar my/org-project-template "* %^{Project Name}
+     :PROPERTIES:
+       :Customer Name: %^{Customer}
+       :Deadline: %^{dd-mm-yyyy}
+     :END" "Template to capture great quotes when i learn of them")
+
+  (defvar my/org-expenses-template "* %^{expense}
+      :PROPERTIES:
+        :DATE: %U
+        :AMOUNT: %^{$0.00}
+        :PAID_TO: %^{company}
+        :PAYMENT_TYPE: %^{eftpos|cash|effort}
+      :END:" "Template to capture expenses")
+  (defvar my/org-greatquotes-template "* %^{great quote here}
+     :PROPERTIES:
+       :QUOTE: %^{great quote}
+       :ATTRIBUTION: /n %?
+     :END" "Template to capture great quotes when i learn of them")
+
+  (setq org-capture-templates
+        `(("c" "Contact" entry (file+headline "~/src/org/contacts.org" "Contacts"), my/org-contacts-template :empty-lines 1)
+          ("d" "Documentation" entry (file+headline "~/src/org/docs.org" "Documentation") "** %^{Subject}\n %^g\n %?\n %i\n Added %U")
+          ("D" "Definition" entry (file+headline "~/src/org/definitions.org" "Definitions") "** %^{Term} :: %^{Definition} ")
+          ("e" "Expense" entry (file+olp+datetree "~/src/org/expenses.org"), my/org-expenses-template :empty-lines 1)
+          ("i" "Idea" entry (file+olp+datetree "~/src/org/ideas.org" "Ideas") "**  %?\n I had this idea on %U\n %a" :empty-lines 1)
+          ("j" "Journal" entry (file+olp+datetree "~/src/org/journal.org") "*  %?\n Entered on %U\n" :empty-lines 1)
+          ("l" "Lyric" entry (file+headline "~/src/org/lyrics.org" "Lyrical Ideas Capture") "** %^{working-title}\n %^{verse}\n %^{hook}\n")
+          ("p" "Project" entry (file+olp+datetree "~/scm/github/oscarfono/projects/current-projects.org"), my/org-project-template :empty-lines 1)
+          ("Q" "Quote" entry (plain "~/src/org/quotes.org"), my/org-greatquotes-template :empty-lines 1)
+          ("r" "Read" entry (file+headline "~/src/org/someday.org" "Read") "** %^{title}\n %^{author}" :empty-lines 1)
+          ("s" "Subject" entry (file+headline "~/src/org/someday.org" "Write"), "** %^{subject}\n" :empty-lines 1)
+          ("t" "Todo" entry (file+headline "~/src/org/todo.org" "Tasks") "** TODO %?\n %i\n %a" :empty-lines 1)
+          ("W" "Wishlist" plain (plain "~/src/org/someday.org" "Wishlist") "** %^{thing}" :empty-lines 1)
+          ("w" "Watch" entry (file+headline "~/src/org/someday.org" "Watch") "** %^{movie title}\n %a" :empty-lines 1)))
+
+
+#+end_src
+
+*** org-exports
+
+#+begin_src elisp :tangle sod.el
+
+  (require 'ox-latex)
+  (unless (boundp 'org-latex-classes)
+    (setq org-latex-classes nil))
+  (add-to-list 'org-latex-classes
+               '("article"
+                 "\\documentclass{article}"
+                 ("\\section{%s}" . "\\section*{%s}")
+                 ("\\subsection{%s}" . "\\subsection*{%s}")
+                 ("\\subsubsection{%s}" . "\\subsubsection*{%s}")
+                 ("\\paragraph{%s}" . "\\paragraph*{%s}")
+                 ("\\subparagraph{%s}" . "\\subparagraph*{%s}"))
+               '("book"
+                 "\\documentclass{book}"
+                 ("\\part{%s}" . "\\part*{%s}")
+                 ("\\chapter{%s}" . "\\chapter*{%s}")
+                 ("\\section{%s}" . "\\section*{%s}")
+                 ("\\subsection{%s}" . "\\subsection*{%s}")
+                 ("\\subsubsection{%s}" . "\\subsubsection*{%s}")))
+
+  (setq org-latex-listings 'minted
+        org-latex-packages-alist '(("" "minted"))
+        org-latex-pdf-process (quote ("texi2dvi --pdf %f
+                                          pdflatex --shell-escape %f
+                                          texi2dvi --pdf %f --shell-escape
+                                          latexmk -pdflatex='lualatex -shell-escape -interaction nonstopmode' -pdf -f  %f --synctex=1")))
+
+(setq org-latex-pdf-process '("pdflatex -shell-escape -interaction nonstopmode -output-directory %o %f"))
+
+(use-package ox-hugo
+  :config
+  (setq-local org-hugo-base-dir "~/scm/github/oscarfono/theblacksheepblog/src/routes/blog/"))
+
+  (use-package ox-mediawiki)
+
+  (setq org-export-backends '(ascii html hugo latex md mediawiki slimhtml))
+
+
+#+end_src
+
+*** org-babel
+**** use org-install
+
+#+begin_src elisp :tangle sod.el
+
+  (require 'org-install)
+
+#+end_src
+
+**** ditaa
+
+requires graphvis system package to be installed
+
+#+begin_src elisp :tangle sod.el
+
+  (setq org-ditaa-jar-path "~/src/org/contrib/scripts/ditaa0_9/ditaa0_9.jar")
+
+#+end_src
+
+**** plantuml
+#+begin_src elisp :tangle sod.el
+
+(setq org-plantuml-jar-path
+      (expand-file-name "~/src/org/contrib/scripts/plantuml-nodot.1.2023.7.jar"))
+#+end_src
+
+**** load these language dictionaries for source blocks
+
+#+begin_src elisp :tangle sod.el
+
+  (org-babel-do-load-languages
+   'org-babel-load-languages
+   '((C . t)
+     (calc . t)
+     (clojure . t)
+     ;; (cpp . t)
+     (css . t)
+     (ditaa . t)
+     (dot . t)
+     (haskell . t)
+     (js . t)
+     (latex . t)
+     ;; (ledger . t)
+     (lisp . t)
+     ;; (make . t)
+     (ocaml . t)
+     (org . t)
+     (perl . t)
+     ;; (php . t)
+     (plantuml . t)
+     (python . t)
+     (R . t)
+     (ruby . t)
+     (sass . t)
+     (scheme . t)
+     (shell . t)
+     (sql . t)))
+
+#+end_src
+
+*** [[https://github.com/sabof/org-bullets][org-bullets]]
+
+Show org-mode bullets as UTF-8 characters.
+
+#+begin_src elisp :tangle sod.el
+
+  (use-package org-bullets
+    :config (add-hook 'org-mode-hook (lambda () (org-bullets-mode 1))))
+
+#+end_src
+
+*** org-brain
+#+begin_src elisp :tangle sod.el
+
+  (use-package org-brain
+    :init
+    (setq org-brain-path "~/src/org/brain")
+    :config
+    (bind-key "C-c b" 'org-brain-prefix-map org-mode-map)
+    (setq org-id-track-globally t)
+    (setq org-id-locations-file "~/.emacs.d/.org-id-locations")
+    (add-hook 'before-save-hook #'org-brain-ensure-ids-in-buffer)
+    (push '("b" "Brain" plain (function org-brain-goto-end)
+            "* %i%?" :empty-lines 1)
+          org-capture-templates)
+    (setq org-brain-visualize-default-choices 'all)
+    (setq org-brain-title-max-length 22)
+    (setq org-brain-include-file-entries nil
+          org-brain-file-entries-use-title nil))
+
+  ;; ;; Allows you to edit entries directly from org-brain-visualize
+  ;; (use-package polymode
+  ;;   :config
+  ;;   (add-hook 'org-brain-visualize-mode-hook #'org-brain-polymode))
+
+#+end_src
+
+*** org-plot
+
+Graphs with gnuplot
+
+#+begin_src elisp :tangle sod.el
+
+  (use-package gnuplot
+    :commands gnuplot-mode
+    :defer t
+    :bind ("C-M-g" . gnuplot))
+
+#+end_src
+
+*** Calendar
+
+**** set location for calendar
+
+#+begin_src elisp :tangle sod.el
+
+  (setq calendar-latitude -40.406925)
+  (setq calendar-longitude 175.578386)
+
+#+end_src
+
+**** Don't display calendars i don't need
+
+#+begin_src elisp :tangle sod.el
+
+  (setq holiday-general-holidays nil)
+  (setq holiday-christian-holidays nil)
+  (setq holiday-hebrew-holidays nil)
+  (setq holiday-islamic-holidays nil)
+  (setq holiday-bahai-holidays nil)
+  (setq holiday-oriental-holidays nil)
+
+#+end_src
+
+**** set NZ Public Holidays
+
+#+begin_src elisp :tangle no
+
+  ;; Use package nz-holidays to pull in New Zealands Public Holidays for calendar.
+  (use-package nz-holidays)
+
+  ;; append it to empty variable holiday-local-holidays
+  (setq calendar-holidays (append holiday-local-holidays holiday-nz-holidays))
+
+#+end_src
+
+**** Count days in given region
+
+From within Calendar, these functions enable to me to count days within a given region, excluding weekends, and public holidays.
+
+Taken from here:
+[[https://stackoverflow.com/questions/23566000/how-to-count-days-excluding-weekends-and-holidays-in-emacs-calendar][https://stackoverflow.com/questions/23566000/how-to-count-days-excluding-weekends-and-holidays-in-emacs-calendar]]
+
+#+begin_src elisp :tangle no
+
+  (defun my-calendar-count-days(d1 d2)
+    (let* ((days (- (calendar-absolute-from-gregorian d1)
+                    (calendar-absolute-from-gregorian d2)))
+           (days (1+ (if (> days 0) days (- days)))))
+      days)
+
+    (defun my-calendar-count-weekend-days(date1 date2)
+      (let* ((tmp-date (if (< date1 date2) date1 date2))
+             (end-date (if (> date1 date2) date1 date2))
+             (weekend-days 0))
+        (while (<= tmp-date end-date)
+          (let ((day-of-week (calendar-day-of-week
+                              (calendar-gregorian-from-absolute tmp-date))))
+            (if (or (= day-of-week 0)
+                    (= day-of-week 6))
+                (incf weekend-days ))
+            (incf tmp-date)))
+        weekend-days)))
+
+  (defun calendar-count-days-region2 ()
+    "Count the number of days (inclusive) between point and the mark
+    excluding weekends and holidays."
+    (interactive)
+    (let* ((d1 (calendar-cursor-to-date t))
+           (d2 (car calendar-mark-ring))
+           (date1 (calendar-absolute-from-gregorian d1))
+           (date2 (calendar-absolute-from-gregorian d2))
+           (start-date (if (<  date1 date2) date1 date2))
+           (end-date (if (> date1 date2) date1 date2))
+           (days (- (my-calendar-count-days d1 d2)
+                    (+ (my-calendar-count-weekend-days start-date end-date)
+                       (my-calendar-count-holidays-on-weekdays-in-range
+                        start-date end-date)))))
+      (message "Region has %d workday%s (inclusive)"
+               days (if (> days 1) "s" "")))
+
+#+end_src
+
+* Customisation
+** [[https://www.gnu.org/software/emacs/manual/html_node/elisp/Windows-and-Frames.html#Windows-and-Frames][Frames]]
+
+*** start fullscreen
+
+#+begin_src elisp :tangle sod.el
+
+  (add-to-list 'default-frame-alist '(fullscreen . maximized))
+
+#+end_src
+
+*** Menu bar
+
+I like the menu bar to be present so i can find things i've forgotten about
+
+#+begin_src elisp :tangle sod.el
+
+  (menu-bar-mode 1)
+
+#+end_src
+
+*** Scroll bars
+
+I like to see scrollbars for visual reference usually but am trialling without for now.
+
+#+begin_src elisp :tangle sod.el
+
+  (scroll-bar-mode 0)
+
+#+end_src
+
+Smoother scrolling experience
+
+#+begin_src elisp :tangle sod.el
+
+  (setq scroll-step           1
+        scroll-conservatively 10000)
+
+#+end_src
+
+*** Tool bar
+
+I don't like to see the tool bar taking up my valuable screen real estate
+
+#+begin_src elisp :tangle sod.el
+
+  (tool-bar-mode 0)
+
+#+end_src
+
+** [[https://gitlab.com/baaash/melancholy-theme][melancholy-theme]]
+
+The custom theme I'm working on.  Ongoing development. WIP.
+
+#+begin_src elisp :tangle sod.el
+
+  (use-package melancholy-theme)
+  (load-theme `melancholy t)
+
+#+end_src
+
+*** Set font options using buffer-face-mode
+
+#+begin_src elisp :tangle sod.el
+  ;; Use variable width font faces in current buffer
+  (defun my-buffer-face-mode-variable ()
+    "Set font to a variable width (proportional) fonts in current buffer"
+    (interactive)
+    (setq buffer-face-mode-face '(:family "OpenSanscondensed" :height 100 :width semi-condensed))
+    (buffer-face-mode))
+
+  ;; Use monospaced font faces in current buffer
+  (defun my-buffer-face-mode-fixed ()
+    "Sets a fixed width (monospace) font in current buffer"
+    (interactive)
+    (setq buffer-face-mode-face '(:family "Inconsolata" :height 100))
+    (buffer-face-mode))
+
+  ;; Set default font faces for Info for these modes
+  (add-hook 'Info-mode-hook 'my-buffer-face-mode-variable)
+  (add-hook 'term-mode-hook 'my-buffer-face-mode-fixed)
+  (add-hook 'man-mode-hook 'my-buffer-face-mode-fixed)
+
+  ;; Control + scroll to change font type
+  (global-set-key [C-mouse-4] 'my-buffer-face-mode-fixed)
+  (global-set-key [C-mouse-5] 'my-buffer-face-mode-variable)
+
+  ;; Shift + scroll to change font size
+  (global-set-key [S-mouse-4] 'text-scale-increase)
+  (global-set-key [S-mouse-5] 'text-scale-decrease)
+
+#+end_src
+
+** [[https://github.com/domtronn/all-the-icons.el#installation][icons]]
+
+Some sweet icons to enhance the ui.
+
+In order for the icons to work it is very important that you install the Resource Fonts included in this package, they are available in the fonts directory. You can also install the latest fonts for this package in the (guessed?) based on the OS by calling the following function:
+
+#+begin_example
+
+      M-x all-the-icons-install-fonts
+
+#+end_example
+
+#+begin_src elisp :tangle sod.el
+
+  (use-package all-the-icons
+    :if (display-graphic-p))
+
+#+end_src
+
+** Modeline
+
+Display full path of file on mode line
+
+#+begin_src elisp :tangle sod.el
+
+  (setq-default mode-line-buffer-identification
+                (let ((orig  (car mode-line-buffer-identification)))
+                  `(:eval (cons (concat ,orig (abbreviate-file-name default-directory))
+                                (cdr mode-line-buffer-identification)))))
+
+#+end_src
+
+*** [[https://github.com/seagle0128/doom-modeline][doom-modeline]]
+
+This was a much better option than what I was doing previously.
+
+#+begin_src elisp :tangle sod.el
+
+  (use-package doom-modeline
+    :hook (after-init . doom-modeline-mode))
+
+#+end_src
+
+** Inhibit startup screen.
+
+I don't want the default start up screen displayed on start up.  That logo is hideous!  Nor do I want a scratch buffer.
+
+#+begin_src elisp :tangle sod.el
+
+  (setq inhibit-startup-message t)
+
+#+end_src
+
+** Line numbers
+
+I like to see the line numbers when coding.
+
+#+begin_src elisp :tangle sod.el
+
+  (when (version<= "26.0.50" emacs-version )
+    (add-hook 'prog-mode-hook #'display-line-numbers-mode))
+
+#+end_src
+
+** Column numbers
+
+#+begin_src elisp :tangle sod.el
+
+  (column-number-mode 1)
+
+#+end_src
+
+** Highlight Indentation
+#+begin_src elisp :tangle sod.el
+
+  (use-package highlight-indentation)
+
+#+end_src
+
+** Delete-selection-mode
+
+allows me to delete highlighted region.  Not standard behaviour in emacs.
+
+#+begin_src elisp :tangle sod.el
+
+  (delete-selection-mode 1)
+
+#+end_src
+
+and this changes emacs default behaviour when backspace-ing tabs
+
+#+begin_src elisp :tangle sod.el
+
+  (setq backward-delete-char-untabify-method 'hungry)
+
+#+end_src
+
+** Undo
+#+begin_src elisp :tangle sod.el
+
+  (use-package undo-tree)
+
+  (global-undo-tree-mode)
+
+#+end_src
+
+** [[https://github.com/jwiegley/use-package/blob/master/bind-key.el][bind-key]]
+
+If you have lots of keybindings set in your .emacs file, it can be
+hard to know which ones you haven't set yet, and which may now be
+overriding some new default in a new emacs version.  This module aims
+to solve that problem.
+
+#+begin_src elisp :tangle sod.el
+
+  (use-package bind-key)
+
+#+end_src
+
+** Speedbar directory tree
+
+#+begin_src elisp :tangle sod.el
+
+  (use-package sr-speedbar
+    :bind ("M-s" . sr-speedbar-toggle)
+    :custom
+    ;; Show tree on the left side
+    (sr-speedbar-right-side t)
+    ;; Show all files
+    (speedbar-show-unknown-files t)
+    ;; Set Width (default is 24)
+    (sr-speedbar-width 50)
+    ;; Set Max Width
+    (sr-speedbar-max-width 35))
+
+  ;; Turn off image icons
+  (setq speedbar-use-images nil)
+
+  ;; launch on startup
+  ;; (sr-speedbar-open)
+
+#+end_src
+
+** [[https://www.emacswiki.org/emacs/ElDoc][Eldoc]]
+
+A very simple but effective thing, eldoc-mode is a MinorMode which shows you, in the echo area, the argument list of the function call you are currently writing. Very handy. By NoahFriedman. Part of Emacs.
+
+#+begin_src elisp :tangle sod.el
+
+  (use-package eldoc
+    :diminish eldoc-mode
+    :commands turn-on-eldoc-mode
+    :defer t
+    :init
+    (progn
+      (add-hook 'elisp-mode-hook 'turn-on-eldoc-mode)
+      (add-hook 'lisp-interaction-mode-hook 'turn-on-eldoc-mode)
+      (add-hook 'ielm-mode-hook 'turn-on-eldoc-mode)))
+
+#+end_src
+
+** [[https://julien.danjou.info/projects/emacs-packages][Rainbow-mode]]
+
+rainbow-mode is a minor mode for Emacs which highlights text representing color codes in various forms by setting the background color of the text accordingly.
+
+#+begin_src elisp :tangle sod.el
+
+  (use-package rainbow-mode
+    :diminish rainbow-mode
+    :init (rainbow-mode))
+
+#+end_src
+
+** Remote File Access with [[https://www.emacswiki.org/emacs/TrampMode][TRAMP]]
+
+#+begin_src elisp :tangle sod.el
+
+  (setq tramp-default-user "sod")
+  (setq tramp-default-method "ssh")
+  ;;(set-default 'tramp-default-proxies-alist (quote ((".*" "\\`root\\'" "/ssh:%h:"))))
+
+#+end_src
+
+** Subwords
+subword-mode changes all cursor movement/edit commands to stop in between the “camelCase” words.
+
+superword-mode  is similar.  It treats text like “x_y” as one word.  Useful for “snake_case”.
+
+subword-mode ＆ superword-mode are mutally exclusive.  Turning one on turns off the other.
+
+To see whether you have subword-mode on, call describe-variable then type “subword-mode”.  Same for superword-mode.
+
+#+begin_src elisp :tangle sod.el
+
+  (subword-mode 1)
+
+#+end_src
+
+** Yes/No becomes y/n
+
+#+begin_src elisp :tangle sod.el
+
+  (fset 'yes-or-no-p 'y-or-n-p)
+
+#+end_src
+
+** Links
+
+Use [[https://www.mozilla.org/en-US/firefox/new/][Firefox]] to open urls
+
+#+begin_src elisp :tangle sod.el
+
+  (setq browse-url-browser-function 'browse-url-generic)
+  (setq browse-url-generic-program "firefox")
+
+#+end_src
+
+** Multiple cursors
+
+#+begin_src elisp :tangle sod.el
+
+  (use-package multiple-cursors
+    :config (global-set-key (kbd "C-S-c C-S-c") 'mc/edit-lines)
+    (global-set-key (kbd "C->") 'mc/mark-next-like-this)
+    (global-set-key (kbd "C-<") 'mc/mark-previous-like-this)
+    (global-set-key (kbd "C-c C-<") 'mc/mark-all-like-this)
+    (define-key mc/keymap (kbd "<return>") nil))
+
+#+end_src
+
+** Magit
+
+#+begin_src elisp :tangle sod.el
+
+  (use-package magit
+    :bind ("C-x g" . magit-status))
+
+#+end_src
+
+** Project managment with [[https://github.com/bbatsov/projectile][projectile]]
+
+#+begin_src elisp :tangle sod.el
+
+  (use-package projectile
+    :diminish projectile-mode
+    :bind-keymap ("C-c p" . projectile-command-map))
+
+  (projectile-mode +1)
+
+#+end_src
+
+** Language tools and helpers
+*** auto-complete mode
+
+#+begin_src elisp :tangle sod.el
+
+  (use-package auto-complete)
+
+#+end_src
+*** Emmet
+#+begin_src elisp :tangle sod.el
+
+(use-package emmet-mode
+:after(web-mode css-mode scss-mode)
+:commands (emmet-mode emmet-expand-line yas/insert-snippet yas-insert-snippet company-complete)
+:config
+(setq emmet-move-cursor-between-quotes t)
+(add-hook 'emmet-mode-hook (lambda () (setq emmet-indent-after-insert nil)))
+(add-hook 'sgml-mode-hook 'emmet-mode) ;; Auto-start on any markup modes
+(add-hook 'css-mode-hook  'emmet-mode) ;; enable Emmet's css abbreviation.
+;(setq emmet-indentation 2)
+(unbind-key "C-M-<left>" emmet-mode-keymap)
+(unbind-key "C-M-<right>" emmet-mode-keymap)
+:bind
+("C-j" . emmet-expand-line)
+((:map emmet-mode-keymap
+         ("C-c [" . emmet-prev-edit-point)
+         ("C-c ]" . emmet-next-edit-point)))
+);end emmet mode
+
+#+end_src
+
+*** Linting
+
+**** flycheck
+
+#+begin_src elisp :tangle sod.el
+
+  (use-package flycheck
+    :config
+    (global-flycheck-mode))
+
+#+end_src
+
+**** package-lint
+
+#+begin_src elisp :tangle sod.el
+
+  (use-package package-lint)
+
+#+end_src
+
+*** [[https://www.emacswiki.org/emacs/Yasnippet][Yasnippet]]
+YASnippet is a template system for Emacs. It allows you to type an abbreviation and automatically expand it into function templates.
+
+#+begin_src elisp :tangle sod.el
+
+  (use-package yasnippet
+    :diminish yas-minor-mode
+    :init (yas-global-mode)
+    :config
+    (yas-reload-all)
+    (add-hook 'prog-mode-hook 'yas-minor-mode)
+    (add-hook 'text-mode-hook 'yas-minor-mode)
+    (add-hook 'term-mode-hook (lambda()(yas-minor-mode -1))))
+  (use-package yasnippet-classic-snippets)
+  (use-package yasnippet-snippets)
+
+#+end_src
+
+*** [[http://company-mode.github.io/][company-mode]]
+
+Company is a text completion framework for Emacs. The name stands for "*COMP*lete *ANY*thing". It uses pluggable back-ends and front-ends to retrieve and display completion candidates.
+
+#+begin_src elisp :tangle sod.el
+
+  (use-package company
+    :bind
+    (:map company-active-map
+          ("C-n". company-select-next)
+          ("C-p". company-select-previous)
+          ("M-<". company-select-first)
+          ("M->". company-select-last))
+    :config
+    (global-company-mode t)
+    :defer 0.5
+    :delight)
+
+  (defun company-yasnippet-or-completion ()
+    (interactive)
+    (or (do-yas-expand)
+        (company-complete-common)))
+
+  (defun check-expansion ()
+    (save-excursion
+      (if (looking-at "\\_>") t
+        (backward-char 1)
+        (if (looking-at "\\.") t
+          (backward-char 1)
+          (if (looking-at "::") t nil)))))
+
+  (defun do-yas-expand ()
+    (let ((yas/fallback-behavior 'return-nil))
+      (yas/expand)))
+
+  (defun tab-indent-or-complete ()
+    (interactive)
+    (if (minibufferp)
+        (minibuffer-complete)
+      (if (or (not yas/minor-mode)
+              (null (do-yas-expand)))
+          (if (check-expansion)
+              (company-complete-common)
+            (indent-for-tab-command)))))
+
+#+end_src
+
+**** company-ansible
+#+begin_src elisp :tangle sod.el
+
+  (use-package company-ansible)
+
+#+end_src
+**** company-c-headers
+#+begin_src elisp :tangle sod.el
+
+  (use-package company-c-headers)
+
+#+end_src
+
+**** company-ctags
+#+begin_src elisp :tangle sod.el
+
+  (use-package company-ctags)
+
+#+end_src
+
+**** company-go
+#+begin_src elisp :tangle sod.el
+
+  (use-package company-go)
+
+#+end_src
+
+**** company-nginx
+#+begin_src elisp :tangle sod.el
+
+  (use-package company-nginx)
+
+#+end_src
+
+**** company-shell
+#+begin_src elisp :tangle sod.el
+
+  (use-package company-shell)
+
+#+end_src
+
+**** company-web
+#+begin_src elisp :tangle sod.el
+
+  (use-package company-web)
+
+#+end_src
+
+*** LSP-mode
+#+begin_src elisp :tangle sod.el
+
+  (use-package lsp-mode
+    :commands lsp
+    :custom
+    ;; what to use when checking on-save. "check" is default, I prefer clippy
+    (lsp-rust-analyzer-cargo-watch-command "clippy")
+    (lsp-eldoc-render-all t)
+    (lsp-idle-delay 0.6)
+    ;; enable / disable the hints as you prefer:
+    (lsp-rust-analyzer-server-display-inlay-hints t)
+    (lsp-rust-analyzer-display-lifetime-elision-hints-enable "skip_trivial")
+    (lsp-rust-analyzer-display-chaining-hints t)
+    (lsp-rust-analyzer-display-lifetime-elision-hints-use-parameter-names nil)
+    (lsp-rust-analyzer-display-closure-return-type-hints t)
+    (lsp-rust-analyzer-display-parameter-hints nil)
+    (lsp-rust-analyzer-display-reborrow-hints nil)
+    :config
+    (add-hook 'lsp-mode-hook 'lsp-ui-mode))
+
+  (use-package lsp-ui
+
+    :ensure
+    :commands lsp-ui-mode
+    :custom
+    (lsp-ui-peek-always-show t)
+    (lsp-ui-sideline-show-hover t)
+    (lsp-ui-doc-enable nil))
+
+#+end_src
+
+*** Rust
+#+begin_src elisp :tangle sod.el
+
+  (use-package rust-mode)
+  (setq rust-cargo-bin "~/.cargo/bin/cargo")
+
+  (use-package rustic
+    :bind (:map rustic-mode-map
+                ("M-j" . lsp-ui-imenu)
+                ("M-?" . lsp-find-references)
+                ("C-c C-c l" . flycheck-list-errors)
+                ("C-c C-c a" . lsp-execute-code-action)
+                ("C-c C-c r" . lsp-rename)
+                ("C-c C-c q" . lsp-workspace-restart)
+                ("C-c C-c Q" . lsp-workspace-shutdown)
+                ("C-c C-c s" . lsp-rust-analyzer-status))
+    :config
+    ;; uncomment for less flashiness
+    ;; (setq lsp-eldoc-hook nil)
+    ;; (setq lsp-enable-symbol-highlighting nil)
+    ;; (setq lsp-signature-auto-activate nil)
+
+    ;; comment to disable rustfmt on save
+    (setq rustic-format-on-save t)
+    (add-hook 'rustic-mode-hook 'rk/rustic-mode-hook))
+
+  (defun rk/rustic-mode-hook ()
+    ;; so that run C-c C-c C-r works without having to confirm, but don't try to
+    ;; save rust buffers that are not file visiting. Once
+    ;; https://github.com/brotzeit/rustic/issues/253 has been resolved this should
+    ;; no longer be necessary.
+    (when buffer-file-name
+      (setq-local buffer-save-without-query t))
+    (add-hook 'before-save-hook 'lsp-format-buffer nil t))
+
+#+end_src
+
+*** Racer
+#+begin_src elisp :tangle sod.el
+
+  (use-package racer
+    :config
+    (add-hook 'rust-mode-hook #'racer-mode)
+    (add-hook 'racer-mode-hook #'eldoc-mode)
+    (add-hook 'racer-mode-hook #'company-mode)
+    (define-key rust-mode-map (kbd "TAB") #'company-indent-or-complete-common))
+
+  (setq company-tooltip-align-annotations t)
+
+#+end_src
+
+*** Tree-sitter
+Tree-sitter is a parser generator tool and an incremental parsing library. It can build a concrete syntax tree for a source file and efficiently update the syntax tree as the source file is edited. Tree-sitter aims to be:
+- General enough to parse any programming language
+- Fast enough to parse on every keystroke in a text
+- Robust enough to provide useful results even in the presence of syntax
+- Dependency-free so that the runtime library (which is written in pure C) can be embedded in any application
+
+#+begin_src elisp :tangle sod.el
+
+  (use-package tree-sitter
+    :straight (tree-sitter
+               :type git
+               :host github
+               :repo "ubolonton/emacs-tree-sitter"
+               :files ("lisp/*.el"))
+    :config (add-to-list 'tree-sitter-major-mode-language-alist '(rustic-mode . rust))
+    :hook ((rustic-mode) . tree-sitter-hl-mode))
+
+  (use-package tree-sitter-langs
+    :straight (tree-sitter-langs
+               :type git
+               :host github
+               :repo "ubolonton/emacs-tree-sitter"
+               :files ("langs/*.el" "langs/queries"))
+    :after tree-sitter)
+
+#+end_src
+
+*** conf-mode
+#+begin_src elisp :tangle sod.el
+
+  (add-hook 'conf-mode-hook
+            (lambda ()
+              (setq indent-tabs-mode t)
+              (setq tab-width 8)))
+
+#+end_src
+*** [[https://github.com/emacs-helm/helm][helm]]
+
+Helm is an Emacs framework for incremental completions and narrowing selections. It helps to rapidly complete file names, buffer names, or any other Emacs interactions requiring selecting an item from a list of possible choices.
+
+#+begin_src elisp :tangle sod.el
+
+  (use-package helm
+    :init
+    (progn
+      (setq helm-candidate-number-limit 100)
+      ;; From https://gist.github.com/antifuchs/9238468
+      (setq helm-idle-delay 0.0
+            helm-input-idle-delay 0.01
+            helm-yas-display-key-on-candidate t
+            helm-quick-update t
+            helm-M-x-requires-pattern nil
+            helm-ff-skip-boring-files t)
+      (helm-mode))
+    :bind (
+           ("C-c h" . helm-mini)
+           ("C-h a" . helm-apropos)
+           ("C-x C-b" . helm-buffers-list)
+           ("C-x b" . helm-buffers-list)
+           ("M-y" . helm-show-kill-ring)
+           ("M-x" . helm-M-x)
+           ("C-x c o" . helm-occur)
+           ("C-x c s" . helm-swoop)
+           ("C-x c y" . helm-yas-complete)
+           ("C-x c Y" . helm-yas-create-snippet-on-region)
+           ;; ("C-x c b" . my/helm-do-grep-book-notes)
+           ("C-x c SPC" . helm-all-mark-rings)))
+
+#+end_src
+
+**** Helm projectile
+
+Helm support using [[https://github.com/bbatsov/helm-projectile][helm-projectile]]
+
+#+begin_src elisp :tangle sod.el
+
+  (use-package helm-projectile
+    :config (helm-projectile-on))
+
+#+end_src
+
+**** Helm-gtags
+#+begin_src elisp :tangle sod.el
+
+  (use-package helm-gtags
+    :config
+    (progn
+      (setq
+       helm-gtags-ignore-case t
+       helm-gtags-auto-update t
+       helm-gtags-use-input-at-cursor t
+       helm-gtags-pulse-at-cursor t
+       helm-gtags-prefix-key "\C-cg"
+       helm-gtags-suggested-key-mapping t)
+
+      ;; Enable helm-gtags-mode
+      (add-hook 'dired-mode-hook 'helm-gtags-mode)
+      (add-hook 'eshell-mode-hook 'helm-gtags-mode)
+      (add-hook 'c-mode-hook 'helm-gtags-mode)
+      (add-hook 'c++-mode-hook 'helm-gtags-mode)
+      (add-hook 'asm-mode-hook 'helm-gtags-mode)
+
+      (define-key helm-gtags-mode-map (kbd "C-c g a") 'helm-gtags-tags-in-this-function)
+      (define-key helm-gtags-mode-map (kbd "C-j") 'helm-gtags-select)
+      (define-key helm-gtags-mode-map (kbd "M-.") 'helm-gtags-dwim)
+      (define-key helm-gtags-mode-map (kbd "M-,") 'helm-gtags-pop-stack)
+      (define-key helm-gtags-mode-map (kbd "C-c <") 'helm-gtags-previous-history)
+      (define-key helm-gtags-mode-map (kbd "C-c >") 'helm-gtags-next-history)))
+
+#+end_src
+
+**** Helm-xref
+#+begin_src elisp :tangle sod.el
+
+  (use-package helm-xref)
+
+#+end_src
+
+*** [[https://github.com/smihica/emmet-mode][emmet-mode]]
+
+This is a major mode for html and css expansion.  Forked from [[https://github.com/rooney/zencoding][zencoding-mode]].
+
+#+begin_src elisp :tangle sod.el
+
+  (use-package emmet-mode
+    :config
+    (progn (add-hook 'sgml-mode-hook 'emmet-mode) ;; Auto-start on any markup modes
+           (add-hook 'css-mode-hook  'emmet-mode)))
+
+#+end_src
+
+*** [[https://github.com/Fuco1/smartparens/wiki][smartparens]]
+
+Smartparens is minor mode for Emacs that deals with parens pairs and
+tries to be smart about it.
+
+#+begin_src elisp :tangle sod.el
+
+  (use-package smartparens
+    :config
+    (progn
+      (show-smartparens-global-mode t)))
+
+  (add-hook 'prog-mode-hook 'turn-on-smartparens-strict-mode)
+  (add-hook 'markdown-mode-hook 'turn-on-smartparens-strict-mode)
+
+#+end_src
+
+*** PDF Tools
+
+#+begin_src elisp :tangle sod.el
+
+  (use-package pdf-tools
+    :defer t)
+
+#+end_src
+
+*** [[http://ledger-cli.org/3.0/doc/ledger-mode.html][Ledger-mode]]
+
+#+begin_src elisp :tangle sod.el
+
+  ;; ledger
+  (use-package ledger-mode
+    :mode "\\.ledger\\'"
+    :config
+    (define-key ledger-mode-map (kbd "C-c t") 'ledger-mode-clean-buffer)
+    (setq ledger-post-amount-alignment-at :decimal
+          ledger-post-amount-alignment-column 49
+          ledger-clear-whole-transactions t)
+    (use-package flycheck-ledger))
+
+#+end_src
+
+*** Typescript-mode
+#+begin_src elisp :tangle sod.el
+
+  (use-package typescript-mode
+    :after tree-sitter
+    :config
+    ;; we choose this instead of tsx-mode so that eglot can automatically figure out language for server
+    ;; see https://github.com/joaotavora/eglot/issues/624 and https://github.com/joaotavora/eglot#handling-quirky-servers
+    (define-derived-mode typescriptreact-mode typescript-mode
+      "TypeScript TSX")
+
+    ;; use our derived mode for tsx files
+    (add-to-list 'auto-mode-alist '("\\.tsx?\\'" . typescriptreact-mode))
+    ;; by default, typescript-mode is mapped to the treesitter typescript parser
+    ;; use our derived mode to map both .tsx AND .ts -> typescriptreact-mode -> treesitter tsx
+    (add-to-list 'tree-sitter-major-mode-language-alist '(typescriptreact-mode . tsx)))
+
+#+end_src
+
+#+begin_src elisp :tangle sod.el
+
+  ;; https://github.com/orzechowskid/tsi.el/
+  ;; great tree-sitter-based indentation for typescript/tsx, css, json
+  (use-package tsi
+    :straight (tsi
+               :type git
+               :host github
+               :repo "orzechowskid/tsi.el")
+    :after tree-sitter
+    ;; define autoload definitions which when actually invoked will cause package to be loaded
+    :commands (tsi-typescript-mode tsi-json-mode tsi-css-mode)
+    :init
+    (add-hook 'typescript-mode-hook (lambda () (tsi-typescript-mode 1)))
+    (add-hook 'json-mode-hook (lambda () (tsi-json-mode 1)))
+    (add-hook 'css-mode-hook (lambda () (tsi-css-mode 1)))
+    (add-hook 'scss-mode-hook (lambda () (tsi-scss-mode 1))))
+
+#+end_src
+*** Svelte.js
+#+begin_src elisp :tangle sod.el
+
+  (use-package svelte-mode
+    :mode "\\.svelte\\'"
+    :config
+    (add-hook 'svelte-mode-hook #'lsp))
+
+#+end_src
+
+*** Apheleia
+#+begin_src elisp :tangle sod.el
+
+(use-package apheleia
+  :ensure t
+  :hook
+  (svelte-mode . apheleia-mode)
+  :custom
+  (apheleia-formatters
+   '((svelte-mode . ("apheleia-npx" "prettier" "--stdin-filepath" (buffer-file-name) "--parser=svelte"))))
+  :config
+  (apheleia-global-mode +1))
+
+#+end_src
+*** Vue.js
+#+begin_src elisp :tangle sod.el
+
+  (use-package vue-mode
+    :mode "\\.vue\\'"
+    :config
+    (add-hook 'vue-mode-hook #'lsp))
+
+#+end_src
+
+*** Yaml-mode
+
+#+begin_src elisp :tangle sod.el
+ (use-package yaml-mode
+    :mode "\\.yml\\'"
+    :config
+    (add-hook 'yaml-mode-hook #'lsp))
+
+#+end_src
+
+
+*** systemd
+#+begin_src elisp :tangle sod.el
+
+  (use-package systemd)
+
+#+end_src
+** Terraform
+#+begin_src  elisp :tangle sod.el
+
+  (use-package terraform-mode)
+
+#+end_src
+
+** Docker
+
+integrate docker functionality into emacs
+
+#+begin_src elisp :tangle sod.el
+
+  ;; dockerfile-mode: An emacs mode for handling Dockerfiles
+  ;; https://github.com/spotify/dockerfile-mode
+  (use-package dockerfile-mode
+    :mode ("Dockerfile\\'" . dockerfile-mode))
+
+  ;; docker: manager docker from emacs
+  ;; https://github.com/Silex/docker.el
+  (use-package docker
+    :defer t
+    :ensure-system-package docker
+    :bind ("C-c d" . docker))
+
+  ;; docker-compose-mode: Major mode for editing docker-compose files
+  ;; https://github.com/meqif/docker-compose-mode
+  (use-package docker-compose-mode
+    :defer t)
+
+  ;; docker-tramp: TRAMP integration for docker containers
+  ;; https://github.com/emacs-pe/docker-tramp.el
+  (use-package docker-tramp
+    :defer t)
+
+#+end_src
+
+** AI Integration
+#+begin_src elisp :tangle sod.el
+
+  (use-package org-ai
+    :straight (org-ai
+               :type git
+               :host github
+               :repo "rksm/org-ai"
+               :local-repo "~/scm/github/contrib/org-ai"
+               :files ("*.el" "README.md" "snippets"))
+    :commands (org-ai-mode
+             org-ai-global-mode)
+    :init
+    (add-hook 'org-mode-hook #'org-ai-mode)
+
+    :custom
+    (org-ai-openai-api-token
+     (let ((secret (car (auth-source-search :host "api.openai.com"
+                                           :login "api-key"
+                                           :require '(:secret)
+                                           :create nil))))
+     (when secret (funcall (plist-get secret :secret)))))
+
+    :config
+    ;; if you are on the gpt-4 beta:
+    (setq org-ai-default-chat-model "gpt-3.5-turbo")
+    ;; if you are using yasnippet and want `ai` snippets
+    (org-ai-install-yasnippets))
+
+#+end_src
+
+** Speech Input with Whisper
+#+begin_src elisp :tangle sod.el
+
+    (use-package whisper
+     :straight (whisper
+                :type git
+                :host github
+                :repo "natrys/whisper"
+                :local-repo "~/scm/github/contrib/whisper")
+     :bind ("M-s-r" . whisper-run)
+     :config
+     (setq whisper-model "base"
+          whisper-language "en"
+          whisper-translate nil
+          whisper--ffmpeg-input-device "hw:1,0"))
+
+
+#+end_src
+
+#+begin_src elisp :tangle no
+
+  (use-package greader)
+  (require 'whisper)
+  (require 'org-ai-talk)
+
+  (setq org-ai-talk-say-words-per-minute 210)
+  (setq org-ai-talk-say-voice "Karen")
+
+#+end_src
+
+** Research
+I'm using Zotero for library management.  The following packages and config help to make easy citations for academic writing.
+*** org-ref
+#+begin_src elisp :tangle sod.el
+
+    (use-package org-ref
+      :straight (org-ref
+                  :type git
+                  :host github
+                  :repo "jkitchin/org-ref"
+                  :local-repo "~/scm/github/contrib/org-ref")
+      :bind (("C-c i [" . 'org-ref-insert-link)
+             ("C-c i ]" . 'org-ref-insert-link-hydra/body))
+      :custom
+      (org-ref-default-bibliography "~/Research/MyLibrary.bib")
+      (bibtex-completion-bibliography "~/Research/MyLibrary.bib"))
+
+  (setq org-src-fontify-natively t
+        org-confirm-babel-evaluate nil
+        org-src-preserve-indentation t)
+
+  (setq LaTeX-command "latex -shell-escape")
+
+  (setq org-latex-pdf-process
+        '("pdflatex -interaction nonstopmode -output-directory %o %f"
+          "bibtex %b"
+          "pdflatex -interaction nonstopmode -output-directory %o %f"
+          "pdflatex -interaction nonstopmode -output-directory %o %f"))
+
+  (setq org-ref-insert-link-function 'org-ref-insert-link-hydra/body
+        org-ref-insert-cite-function 'org-ref-cite-insert-helm
+        org-ref-insert-label-function 'org-ref-insert-label-link
+        org-ref-insert-ref-function 'org-ref-insert-ref-link
+        org-ref-cite-onclick-function (lambda (_) (org-ref-citation-hydra/body)))
+
+#+end_src
+
+*** helm-bibtex
+#+begin_src elisp :tangle sod.el
+
+  (use-package helm-bibtex
+    :straight (helm-bibtex
+               :type git
+               :host github
+               :repo "tmalsburg/helm-bibtex"
+               :local-repo "~/scm/github/contrib/helm-bibtex")
+    :custom
+    (helm-bibtex-bibliography '("~/Research/MyLibrary.bib"))
+    (reftex-default-bibliography '("~/Research/MyLibrary.bib"))
+    (bibtex-completion-pdf-field "file")
+    :hook (Tex . (lambda () (define-key Tex-mode-map "\C-c h" 'helm-bibtex))))
+
+#+end_src
+
+** Statistics
+
+*** ESS - Emacs Speaks Statistics
+
+** Presentations
+#+begin_src elisp :tangle no
+
+  (use-package ox-reveal
+    :straight (ox-reveal
+               :type git
+               :host github
+               :repo "hexmode/ox-reveal"
+               :local-repo "~/scm/github/contrib/ox-reveal"
+               :files ("*.el"))
+    :config
+     (setq org-reveal-root "file:///home/sod/scm/github/contrib/reveal.js"))
+
+#+end_src
+
+#+begin_src elisp :tangle sod.el
+
+    (add-to-list 'load-path "~/scm/github/contrib/emacs-reveal")
+    (require 'emacs-reveal)
+
+#+end_src
+
+
+* Finalisation
+** Refresh agenda
+#+begin_src elisp :tangle sod.el
+
+  (org-agenda-redo-all)
+
+#+end_src

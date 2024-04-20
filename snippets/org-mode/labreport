@@ -1,0 +1,19 @@
+# key: labreport
+# name: labreport
+# --
+#+TITLE: $1
+#+AUTHOR: Cooper Oscarfono
+* Abstract
+/a summary of the main points of the Introduction, Method, Results, and Discussion./
+* Introduction
+/a description of sufficient background material for the reader to understand the research area, and an explanation of the main reasons for carrying out the study./
+* Method
+/contains details of participants, equipment and materials, and how the study was conducted./
+* Results
+/contains a description of the data obtained in the study. This often includes descriptive statistics such as means and standard deviations (presented either in figures or tables) and the results of statistical analyses./
+* Discussion
+/relates your results to other relevant experiments, typically those referred to in the Introduction, and discusses the conclusions that can be drawn from your data./
+* References
+/contains details of papers, books, and other publications that are cited in the text./
+* Appendix
+/contains supplementary material such as computational and raw data, or technical descriptions of stimuli./
