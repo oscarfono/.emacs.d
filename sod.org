@@ -1473,6 +1473,13 @@ Company is a text completion framework for Emacs. The name stands for "*COMP*let
 
 #+end_src
 
+*** zig
+#+begin_src elisp :tangle sod.el
+
+(use-package zig-mode)
+
+#+end_src
+
 *** Racer
 #+begin_src elisp :tangle sod.el
 
@@ -1710,17 +1717,48 @@ tries to be smart about it.
 #+end_src
 
 *** Apheleia
-#+begin_src elisp :tangle sod.el
+#+begin_src elisp :tangle no
 
 (use-package apheleia
   :ensure t
   :hook
   (svelte-mode . apheleia-mode)
-  :custom
-  (apheleia-formatters
-   '((svelte-mode . ("apheleia-npx" "prettier" "--stdin-filepath" (buffer-file-name) "--parser=svelte"))))
+(use-package apheleia
+  :straight t
   :config
-  (apheleia-global-mode +1))
+  (apheleia-global-mode +1)
+  (add-to-list 'apheleia-mode-alist '(svelte-mode . (prettier . (args . ("--plugin-prettier-plugin-svelte")))))
+  (add-to-list 'apheleia-mode-alist '(javascript-mode . prettier))
+  (add-to-list 'apheleia-mode-alist '(typescript-mode . prettier))
+  (add-to-list 'apheleia-mode-alist '(css-mode . prettier))
+  (add-to-list 'apheleia-mode-alist '(scss-mode . prettier))
+  (add-to-list 'apheleia-mode-alist '(less-css-mode . prettier))
+  (add-to-list 'apheleia-mode-alist '(json-mode . prettier))
+  (add-to-list 'apheleia-mode-alist '(jsonc-mode . prettier))
+  (add-to-list 'apheleia-mode-alist '(graphql-mode . prettier))
+  (add-to-list 'apheleia-mode-alist '(markdown-mode . prettier))
+  (add-to-list 'apheleia-mode-alist '(yaml-mode . prettier))
+  (add-to-list 'apheleia-mode-alist '(html-mode . prettier))
+  (add-to-list 'apheleia-mode-alist '(vue-mode . prettier))
+  (add-to-list 'apheleia-mode-alist '(glimmer-mode . prettier))
+  (add-to-list 'apheleia-mode-alist '(graphql-mode . prettier))
+  (add-to-list 'apheleia-mode-alist '(handlebars-mode . prettier))
+  (add-to-list 'apheleia-mode-alist '(markdown-mode . prettier))
+  (add-to-list 'apheleia-mode-alist '(css-mode . prettier))
+  (add-to-list 'apheleia-mode-alist '(web-mode . prettier))
+  (add-to-list 'apheleia-mode-alist '(typescript-mode . prettier))
+  (add-to-list 'apheleia-mode-alist '(ruby-mode . rufo))
+  (add-to-list 'apheleia-mode-alist '(elixir-mode . mix-format))
+  (add-to-list 'apheleia-mode-alist '(java-mode . google-java-format))
+  (add-to-list 'apheleia-mode-alist '(kotlin-mode . ktlint))
+  (add-to-list 'apheleia-mode-alist '(groovy-mode . prettier))
+  (add-to-list 'apheleia-mode-alist '(rustic-mode . rustfmt))
+  (add-to-list 'apheleia-mode-alist '(dart-mode . dart-format))
+  (add-to-list 'apheleia-mode-alist '(nix-mode . nixpkgs-fmt))
+  (add-to-list 'apheleia-mode-alist '(python-mode . black)))
+
+;; If you want to save files formatted on save, add this hook
+(add-hook 'after-save-hook #'apheleia-format-buffer-maybe)
 
 #+end_src
 *** Vue.js
