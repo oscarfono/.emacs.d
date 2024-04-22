@@ -1150,6 +1150,25 @@ A very simple but effective thing, eldoc-mode is a MinorMode which shows you, in
 
 #+end_src
 
+** Elfeed
+#+begin_src elisp :tangle sod.el
+
+  (use-package elfeed
+    :bind ("C-x w" . elfeed))
+    (setf url-queue-timeout 18)
+    (setq elfeed-feeds
+        '(("http://nullprogram.com/feed/")
+           ("https://sachachua.com/blog/category/emacs-news/feed/")
+           ("https://emacsair.me/feed.xml")
+           ("https://karl-voit.at/feeds/lazyblorg-all.atom_1.0.links-only.xml")
+           ("https://github.crookster.org/feed.xml")
+           ("https://0pointer.net/blog/index.rss20")
+           ("https://blog.jessfraz.com/index.xml")
+           ("https://stgraber.org/comments/feed/")
+           ("https://everythingshouldbevirtual.com/feed.xml")
+           ("https://www.nicksherlock.com/feed")))
+#+end_src
+
 ** [[https://julien.danjou.info/projects/emacs-packages][Rainbow-mode]]
 
 rainbow-mode is a minor mode for Emacs which highlights text representing color codes in various forms by setting the background color of the text accordingly.
