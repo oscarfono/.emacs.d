@@ -1,0 +1,21 @@
+# -*- mode: snippet -*-
+# name: frontmatter
+# key: frontmatter
+# --
+---
+title: $0
+author: Cooper Oscarfono
+date: `(current-time-string)`
+categories:
+- "${2:$$(yas-choose-value '(
+                           "branding"
+                           "controversial"
+                           "emacs"
+                           "linux"
+                           "open source"
+                           "music"
+                           ))}"
+image: '/content-images/$2'
+alt: '$3'
+---
+$4

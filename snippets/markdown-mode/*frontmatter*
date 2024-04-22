@@ -1,0 +1,20 @@
+# key: frontmatter
+# name: frontmatter
+# --
+---
+title: $1
+author: Cooper Oscarfono
+date: `(format-time-string "%Y-%m-%d")`
+categories:
+- "${2:$$(yas-choose-value '(
+                          "branding"
+                          "controversial"
+                          "emacs"
+                          "linux"
+                          "open source"
+                          "music"
+                          ))}"
+image: '/content-images/$3'
+alt: '$4'
+---
+$0
