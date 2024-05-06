@@ -306,7 +306,7 @@ Activate syntax highlighting globally
 
 #+begin_src elisp :tangle sod.el
 
-  (setq default-directory "~/scm/github/oscarfono/")
+  (setq default-directory "~/Public/projects/")
 
 #+end_src
 ** Encryption
@@ -462,7 +462,7 @@ services I need to authenticate to.  ERC and Org2Blog need these credentials to 
 "Warm regards, \n"
 "\n"
 "#+ATTR_LATEX: :center nil :width 5cm \n"
-"[[file:~/src/private/id/sodsig-001.png]] \n"
+"[[file:~/Documents/id/sodsig-001.png]] \n"
 "\n"
 "Cooper Oscarfono \n" )
   (global-set-key [C-S-f6] 'ltr-skeleton)
@@ -498,7 +498,7 @@ I like to have 5 levels of todo:
   #+begin_src elisp :tangle sod.el
 
     ;;file to save todo items
-    (setq org-agenda-files (list "~/src/org/todo.org"))
+    (setq org-agenda-files (list "~/Documents/todo.org"))
 
     ;;set priority range from A to E with default as A
     (setq org-highest-priority ?A)
@@ -642,20 +642,20 @@ Things I want to capture:
      :END" "Template to capture great quotes when i learn of them")
 
   (setq org-capture-templates
-        `(("c" "Contact" entry (file+headline "~/src/org/contacts.org" "Contacts"), my/org-contacts-template :empty-lines 1)
-          ("d" "Documentation" entry (file+headline "~/src/org/docs.org" "Documentation") "** %^{Subject}\n %^g\n %?\n %i\n Added %U")
-          ("D" "Definition" entry (file+headline "~/src/org/definitions.org" "Definitions") "** %^{Term} :: %^{Definition} ")
-          ("e" "Expense" entry (file+olp+datetree "~/src/org/expenses.org"), my/org-expenses-template :empty-lines 1)
-          ("i" "Idea" entry (file+olp+datetree "~/src/org/ideas.org" "Ideas") "**  %?\n I had this idea on %U\n %a" :empty-lines 1)
-          ("j" "Journal" entry (file+olp+datetree "~/src/org/journal.org") "*  %?\n Entered on %U\n" :empty-lines 1)
-          ("l" "Lyric" entry (file+headline "~/src/org/lyrics.org" "Lyrical Ideas Capture") "** %^{working-title}\n %^{verse}\n %^{hook}\n")
-          ("p" "Project" entry (file+olp+datetree "~/scm/github/oscarfono/projects/current-projects.org"), my/org-project-template :empty-lines 1)
-          ("Q" "Quote" entry (plain "~/src/org/quotes.org"), my/org-greatquotes-template :empty-lines 1)
-          ("r" "Read" entry (file+headline "~/src/org/someday.org" "Read") "** %^{title}\n %^{author}" :empty-lines 1)
-          ("s" "Subject" entry (file+headline "~/src/org/someday.org" "Write"), "** %^{subject}\n" :empty-lines 1)
-          ("t" "Todo" entry (file+headline "~/src/org/todo.org" "Tasks") "** TODO %?\n %i\n %a" :empty-lines 1)
-          ("W" "Wishlist" plain (plain "~/src/org/someday.org" "Wishlist") "** %^{thing}" :empty-lines 1)
-          ("w" "Watch" entry (file+headline "~/src/org/someday.org" "Watch") "** %^{movie title}\n %a" :empty-lines 1)))
+        `(("c" "Contact" entry (file+headline "~/Documents/contacts.org" "Contacts"), my/org-contacts-template :empty-lines 1)
+          ("d" "Documentation" entry (file+headline "~/Documents/docs.org" "Documentation") "** %^{Subject}\n %^g\n %?\n %i\n Added %U")
+          ("D" "Definition" entry (file+headline "~/Documents/definitions.org" "Definitions") "** %^{Term} :: %^{Definition} ")
+          ("e" "Expense" entry (file+olp+datetree "~/Documents/expenses.org"), my/org-expenses-template :empty-lines 1)
+          ("i" "Idea" entry (file+olp+datetree "~/Documents/ideas.org" "Ideas") "**  %?\n I had this idea on %U\n %a" :empty-lines 1)
+          ("j" "Journal" entry (file+olp+datetree "~/Documents/journal.org") "*  %?\n Entered on %U\n" :empty-lines 1)
+          ("l" "Lyric" entry (file+headline "~/Documents/lyrics.org" "Lyrical Ideas Capture") "** %^{working-title}\n %^{verse}\n %^{hook}\n")
+          ("p" "Project" entry (file+olp+datetree "~/Public/projects/oscarfono/projects/current-projects.org"), my/org-project-template :empty-lines 1)
+          ("Q" "Quote" entry (plain "~/Documents/quotes.org"), my/org-greatquotes-template :empty-lines 1)
+          ("r" "Read" entry (file+headline "~/Documents/someday.org" "Read") "** %^{title}\n %^{author}" :empty-lines 1)
+          ("s" "Subject" entry (file+headline "~/Documents/someday.org" "Write"), "** %^{subject}\n" :empty-lines 1)
+          ("t" "Todo" entry (file+headline "~/Documents/todo.org" "Tasks") "** TODO %?\n %i\n %a" :empty-lines 1)
+          ("W" "Wishlist" plain (plain "~/Documents/someday.org" "Wishlist") "** %^{thing}" :empty-lines 1)
+          ("w" "Watch" entry (file+headline "~/Documents/someday.org" "Watch") "** %^{movie title}\n %a" :empty-lines 1)))
 
 
 #+end_src
@@ -694,7 +694,7 @@ Things I want to capture:
 
 (use-package ox-hugo
   :config
-  (setq-local org-hugo-base-dir "~/scm/github/oscarfono/theblacksheepblog/src/routes/blog/"))
+  (setq-local org-hugo-base-dir "~/Public/projects/oscarfono/theblacksheepblog/src/routes/blog/"))
 
   (use-package ox-mediawiki)
 
@@ -704,13 +704,6 @@ Things I want to capture:
 #+end_src
 
 *** org-babel
-**** use org-install
-
-#+begin_src elisp :tangle sod.el
-
-  (require 'org-install)
-
-#+end_src
 
 **** ditaa
 
@@ -718,7 +711,7 @@ requires graphvis system package to be installed
 
 #+begin_src elisp :tangle sod.el
 
-  (setq org-ditaa-jar-path "~/src/org/contrib/scripts/ditaa0_9/ditaa0_9.jar")
+  (setq org-ditaa-jar-path "~/Documents/contrib/scripts/ditaa0_9/ditaa0_9.jar")
 
 #+end_src
 
@@ -726,7 +719,7 @@ requires graphvis system package to be installed
 #+begin_src elisp :tangle sod.el
 
 (setq org-plantuml-jar-path
-      (expand-file-name "~/src/org/contrib/scripts/plantuml-nodot.1.2023.7.jar"))
+      (expand-file-name "~/Documents/contrib/scripts/plantuml-nodot.1.2023.7.jar"))
 #+end_src
 
 **** load these language dictionaries for source blocks
@@ -779,7 +772,7 @@ Show org-mode bullets as UTF-8 characters.
 
   (use-package org-brain
     :init
-    (setq org-brain-path "~/src/org/brain")
+    (setq org-brain-path "~/Documents/brain")
     :config
     (bind-key "C-c b" 'org-brain-prefix-map org-mode-map)
     (setq org-id-track-globally t)
@@ -1087,9 +1080,20 @@ and this changes emacs default behaviour when backspace-ing tabs
 #+end_src
 
 ** Undo
+If you need to clean up files that have already been saved incorrectly, cd into that dir and:
+
+#+begin_example bash
+
+find -type f -name '*.~undo-tree~' -delete
+
+#+end_example
+
 #+begin_src elisp :tangle sod.el
 
   (use-package undo-tree)
+
+  ;; Prevent undo tree files from polluting your git repo
+  (setq undo-tree-history-directory-alist '(("." . "~/.emacs.d/undo")))
 
   (global-undo-tree-mode)
 
@@ -1883,7 +1887,7 @@ integrate docker functionality into emacs
                 :type git
                 :host github
                 :repo "natrys/whisper"
-                :local-repo "~/scm/github/contrib/whisper")
+                :local-repo "~/Public/projects/contrib/whisper")
      :bind ("M-s-r" . whisper-run)
      :config
      (setq whisper-model "base"
