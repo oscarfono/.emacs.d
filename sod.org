@@ -1841,11 +1841,6 @@ integrate docker functionality into emacs
   (use-package docker-compose-mode
     :defer t)
 
-  ;; docker-tramp: TRAMP integration for docker containers
-  ;; https://github.com/emacs-pe/docker-tramp.el
-  (use-package docker-tramp
-    :defer t)
-
 #+end_src
 
 ** AI Integration
