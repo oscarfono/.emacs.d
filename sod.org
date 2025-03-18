@@ -142,7 +142,7 @@ exist. Therefore, it is necessary to create them yourself:
 *** set load path
 #+begin_src elisp :tangle sod.el
 
-  (add-to-list 'load-path (expand-file-name "~/scm/gitlab/baaash/elisp"))
+  (add-to-list 'load-path (expand-file-name "~/projects/elisp"))
 
 #+end_src
 
@@ -306,7 +306,7 @@ Activate syntax highlighting globally
 
 #+begin_src elisp :tangle sod.el
 
-  (setq default-directory "~/Public/projects/")
+  (setq default-directory "~/projects/")
 
 #+end_src
 ** Encryption
@@ -325,7 +325,7 @@ Add the following line to the top of the document to be encrypted and save the f
 
 #+begin_example
 
-  # -*- mode:org; epa-file-encrypt-to: ("bleat@baaa.sh") -*-
+  # -*- mode:org; epa-file-encrypt-to: ("cooper@oscarfono.com") -*-
 
 #+end_example
 
@@ -345,7 +345,7 @@ services I need to authenticate to.  ERC and Org2Blog need these credentials to 
 
   (setq auth-source-debug t)
   (setq auth-sources
-        '((:source "~/.authinfo.gpg")))
+        '((:source "~/.shh/.authinfo.gpg")))
 
 #+end_src
 
@@ -462,7 +462,7 @@ services I need to authenticate to.  ERC and Org2Blog need these credentials to 
 "Warm regards, \n"
 "\n"
 "#+ATTR_LATEX: :center nil :width 5cm \n"
-"[[file:~/Documents/id/sodsig-001.png]] \n"
+"[[file:~/ID/sodsig-001.png]] \n"
 "\n"
 "Cooper Oscarfono \n" )
   (global-set-key [C-S-f6] 'ltr-skeleton)
@@ -498,7 +498,7 @@ I like to have 5 levels of todo:
   #+begin_src elisp :tangle sod.el
 
     ;;file to save todo items
-    (setq org-agenda-files (list "~/Documents/todo.org"))
+    (setq org-agenda-files (list "~/capture/todo.org"))
 
     ;;set priority range from A to E with default as A
     (setq org-highest-priority ?A)
@@ -516,7 +516,7 @@ Since it is normally too much to record a note for every state, Org expects conf
 #+begin_src elisp :tangle sod.el
 
   (setq org-todo-keywords
-        '((sequence "TODO(t)" " NEXT(n/)" " >|< IN-PROGRESS(i!)" "⚠ WAIT(w@/!)" "|" "DONE(d!)" "✘ KILL(k!)" "➰ PASS(p@/!)" )))
+        '((sequence "TODO(t)" "NEXT(n/)" " >|< IN-PROGRESS(i!)" "⚠ WAIT(w@/!)" "|" "DONE(d!)" "✘ KILL(k!)" "➰ PASS(p@/!)" )))
 
 #+end_src
 
@@ -642,20 +642,20 @@ Things I want to capture:
      :END" "Template to capture great quotes when i learn of them")
 
   (setq org-capture-templates
-        `(("c" "Contact" entry (file+headline "~/Documents/contacts.org" "Contacts"), my/org-contacts-template :empty-lines 1)
+        `(("c" "Contact" entry (file+headline "~/capture/contacts.org" "Contacts"), my/org-contacts-template :empty-lines 1)
           ("d" "Documentation" entry (file+headline "~/Documents/docs.org" "Documentation") "** %^{Subject}\n %^g\n %?\n %i\n Added %U")
-          ("D" "Definition" entry (file+headline "~/Documents/definitions.org" "Definitions") "** %^{Term} :: %^{Definition} ")
-          ("e" "Expense" entry (file+olp+datetree "~/Documents/expenses.org"), my/org-expenses-template :empty-lines 1)
-          ("i" "Idea" entry (file+olp+datetree "~/Documents/ideas.org" "Ideas") "**  %?\n I had this idea on %U\n %a" :empty-lines 1)
-          ("j" "Journal" entry (file+olp+datetree "~/Documents/journal.org") "*  %?\n Entered on %U\n" :empty-lines 1)
-          ("l" "Lyric" entry (file+headline "~/Documents/lyrics.org" "Lyrical Ideas Capture") "** %^{working-title}\n %^{verse}\n %^{hook}\n")
+          ("D" "Definition" entry (file+headline "~/capture/definitions.org" "Definitions") "** %^{Term} :: %^{Definition} ")
+          ("e" "Expense" entry (file+olp+datetree "~/capture/expenses.org"), my/org-expenses-template :empty-lines 1)
+          ("i" "Idea" entry (file+olp+datetree "~/capture/ideas.org" "Ideas") "**  %?\n I had this idea on %U\n %a" :empty-lines 1)
+          ("j" "Journal" entry (file+olp+datetree "~/capture/journal.org") "*  %?\n Entered on %U\n" :empty-lines 1)
+          ("l" "Lyric" entry (file+headline "~/capture/lyrical-ideas.org" "Lyrical Ideas Capture") "** %^{working-title}\n %^{verse}\n %^{hook}\n")
           ("p" "Project" entry (file+olp+datetree "~/Public/projects/oscarfono/projects/current-projects.org"), my/org-project-template :empty-lines 1)
-          ("Q" "Quote" entry (plain "~/Documents/quotes.org"), my/org-greatquotes-template :empty-lines 1)
-          ("r" "Read" entry (file+headline "~/Documents/someday.org" "Read") "** %^{title}\n %^{author}" :empty-lines 1)
-          ("s" "Subject" entry (file+headline "~/Documents/someday.org" "Write"), "** %^{subject}\n" :empty-lines 1)
-          ("t" "Todo" entry (file+headline "~/Documents/todo.org" "Tasks") "** TODO %?\n %i\n %a" :empty-lines 1)
-          ("W" "Wishlist" plain (plain "~/Documents/someday.org" "Wishlist") "** %^{thing}" :empty-lines 1)
-          ("w" "Watch" entry (file+headline "~/Documents/someday.org" "Watch") "** %^{movie title}\n %a" :empty-lines 1)))
+          ("Q" "Quote" entry (plain "~/capture/quotes.org"), my/org-greatquotes-template :empty-lines 1)
+          ("r" "Read" entry (file+headline "~/capture/someday.org" "Read") "** %^{title}\n %^{author}" :empty-lines 1)
+          ("s" "Subject" entry (file+headline "~/capture/someday.org" "Write"), "** %^{subject}\n" :empty-lines 1)
+          ("t" "Todo" entry (file+headline "~/capture/todo.org" "Tasks") "** TODO %?\n %i\n %a" :empty-lines 1)
+          ("W" "Wishlist" plain (plain "~/capture/someday.org" "Wishlist") "** %^{thing}" :empty-lines 1)
+          ("w" "Watch" entry (file+headline "~/capture/someday.org" "Watch") "** %^{movie title}\n %a" :empty-lines 1)))
 
 
 #+end_src
@@ -694,7 +694,7 @@ Things I want to capture:
 
 (use-package ox-hugo
   :config
-  (setq-local org-hugo-base-dir "~/Public/projects/oscarfono/theblacksheepblog/src/routes/blog/"))
+  (setq-local org-hugo-base-dir "~/projects/web/hugo/"))
 
   (use-package ox-mediawiki)
 
@@ -707,19 +707,22 @@ Things I want to capture:
 
 **** ditaa
 
-requires graphvis system package to be installed
+requires graphviz system package to be installed
 
-#+begin_src elisp :tangle sod.el
+Edit: now that i've moved to Arch Linux there is a package I can install instead
 
-  (setq org-ditaa-jar-path "~/Documents/contrib/scripts/ditaa0_9/ditaa0_9.jar")
+#+begin_src elisp :tangle no
+
+  (setq org-ditaa-jar-path "~/projects/contrib/scripts/ditaa0_9/ditaa0_9.jar")
 
 #+end_src
 
 **** plantuml
-#+begin_src elisp :tangle sod.el
+Edit: now that i've moved to Arch Linux there is a package I can install instead
+#+begin_src elisp :tangle no
 
 (setq org-plantuml-jar-path
-      (expand-file-name "~/Documents/contrib/scripts/plantuml-nodot.1.2023.7.jar"))
+      (expand-file-name "~/projects/contrib/scripts/plantuml-nodot.1.2023.7.jar"))
 #+end_src
 
 **** load these language dictionaries for source blocks
@@ -1844,14 +1847,14 @@ integrate docker functionality into emacs
 #+end_src
 
 ** AI Integration
-#+begin_src elisp :tangle sod.el
+#+begin_src elisp :tangle no
 
   (use-package org-ai
     :straight (org-ai
                :type git
                :host github
                :repo "rksm/org-ai"
-               :local-repo "~/scm/github/contrib/org-ai"
+               :local-repo "~/projects/contrib/org-ai"
                :files ("*.el" "README.md" "snippets"))
     :commands (org-ai-mode
              org-ai-global-mode)
@@ -1874,15 +1877,71 @@ integrate docker functionality into emacs
 
 #+end_src
 
-** Speech Input with Whisper
 #+begin_src elisp :tangle sod.el
+
+(use-package aidermacs
+  :ensure t  ;; Ensure the package is installed
+  :bind (("C-c a" . aidermacs-transient-menu))
+  :init
+  ;; Set environment variables for API keys before running Aider using auth-source
+  (add-hook 'aidermacs-before-run-backend-hook
+            (lambda ()
+              ;; Load OpenAI key
+              (setenv "OPENAI_API_KEY"
+                      (auth-source-pick-first-password
+                       :host "api.openai.com"
+                       :user "user"))
+              ;; Load Claude key
+              (setenv "ANTHROPIC_API_KEY"
+                      (auth-source-pick-first-password
+                       :host "api.anthropic.com"
+                       :user "user"))
+              ;; Load Gemini key
+              (setenv "GOOGLE_API_KEY"
+                      (auth-source-pick-first-password
+                       :host "aistudio.google.com"
+                       :user "user"))
+              ;; Load Perplexity key
+              (setenv "PERPLEXITY_API_KEY"
+                      (auth-source-pick-first-password
+                       :host "api.perplexity.ai"
+                       :user "user"))))
+  :config
+  :custom
+  ;; Configuration options
+  (aidermacs-use-architect-mode t)  ;; Enable architect mode
+  (aidermacs-default-model "grok")  ;; Use Claude Sonnet as default
+  ;; Add custom model mappings
+  (aidermacs-model-aliases '(("sonnet" . "claude-3-5-sonnet-20241022")
+                             ("gpt4" . "gpt-4o")
+                             ("gemini" . "gemini-pro"))))
+
+;; Add Grok support via gptel
+(use-package gptel
+  :ensure t
+  :config
+  (setq gptel-api-key
+        (lambda ()
+          (auth-source-pick-first-password
+           :host "api.x.ai"
+           :user "mindthelion")))
+  (gptel-make-xai "Grok"  ;; Define Grok backend
+      :key gptel-api-key
+      :url "https://api.x.ai/v1/chat/completions")  ;; Adjust URL if xAI provides a REST API later
+  :bind (("C-c g" . gptel-menu)))  ;; Bind to access Grok
+
+#+end_src
+
+
+** Speech Input with Whisper
+#+begin_src elisp :tangle no
 
     (use-package whisper
      :straight (whisper
                 :type git
                 :host github
                 :repo "natrys/whisper"
-                :local-repo "~/Public/projects/contrib/whisper")
+                :local-repo "~/projects/contrib/whisper")
      :bind ("M-s-r" . whisper-run)
      :config
      (setq whisper-model "base"
@@ -1914,7 +1973,7 @@ I'm using Zotero for library management.  The following packages and config help
                   :type git
                   :host github
                   :repo "jkitchin/org-ref"
-                  :local-repo "~/scm/github/contrib/org-ref")
+                  :local-repo "~/projects/contrib/org-ref")
       :bind (("C-c i [" . 'org-ref-insert-link)
              ("C-c i ]" . 'org-ref-insert-link-hydra/body))
       :custom
@@ -1949,7 +2008,7 @@ I'm using Zotero for library management.  The following packages and config help
                :type git
                :host github
                :repo "tmalsburg/helm-bibtex"
-               :local-repo "~/scm/github/contrib/helm-bibtex")
+               :local-repo "~/projects/contrib/helm-bibtex")
     :custom
     (helm-bibtex-bibliography '("~/Research/MyLibrary.bib"))
     (reftex-default-bibliography '("~/Research/MyLibrary.bib"))
@@ -1970,16 +2029,15 @@ I'm using Zotero for library management.  The following packages and config help
                :type git
                :host github
                :repo "hexmode/ox-reveal"
-               :local-repo "~/scm/github/contrib/ox-reveal"
+               :local-repo "~/projects/contrib/ox-reveal"
                :files ("*.el"))
     :config
      (setq org-reveal-root "file:///home/sod/scm/github/contrib/reveal.js"))
 
 #+end_src
 
-#+begin_src elisp :tangle sod.el
-
-    (add-to-list 'load-path "~/scm/github/contrib/emacs-reveal")
+#+begin_src elisp :tangle no
+    (add-to-list 'load-path "~/projects/contrib/emacs-reveal")
     (require 'emacs-reveal)
 
 #+end_src
