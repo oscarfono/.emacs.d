@@ -29,7 +29,7 @@
 (require 'core-theme)
 (require 'core-settings)
 (require 'core-packages)
-;; (require 'core-orgmode)
+(require 'core-orgmode)
 (require 'core-keybindings)
 
 (provide 'init)

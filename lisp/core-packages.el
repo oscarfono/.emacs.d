@@ -138,7 +138,7 @@
 ;;;; UI and visuals
 
 (use-package nerd-icons
-  :straight (:type git :host github :repo "rainstormza/nerd-icons.el")
+  :straight (:type git :host github :repo "rainstormstudio/nerd-icons.el")
   :ensure t
   :if (display-graphic-p)
   :config

@@ -29,7 +29,7 @@
 
 ;;;; TODOs and priorities
 
-(setq org-agenda-files (list "~/capture/todo.org")) ; Files for agenda tracking.
+(setq org-agenda-files (list "~/Capture/todo.org")) ; Files for agenda tracking.
 (setq org-highest-priority ?A)           ; Highest TODO priority.
 (setq org-lowest-priority ?E)            ; Lowest TODO priority.
 (setq org-default-priority ?A)           ; Default TODO priority.
@@ -105,7 +105,7 @@
   "\n"
   "PO Box 19, \n"
   "Sandgate\n"
-  "QLD 9348 \n"
+  "Queensland 4017 \n"
   "\n"
   "Dear sir/madam, \n"
   "\n"
@@ -114,7 +114,7 @@
   "Warm regards, \n"
   "\n"
   "#+ATTR_LATEX: :center nil :width 5cm \n"
-  "[[file:~/ID/sodsig-001.png]] \n"
+  "[[file:~/DocumentsID/sodsig-001.png]] \n"
   "\n"
   "Cooper Oscarfono \n")
 
@@ -125,7 +125,7 @@
     :PROPERTIES:
       :EMAIL: %(org-contacts-template-email)
       :PHONE: %^{XXX-XXX-XXXX}
-      :ADDRESS: %^{street name. city, postcode NZ}
+      :ADDRESS: %^{street name. city, state, postcode }
       :BIRTHDAY: %^{dd-mm-yyyy}t
       :NOTE: %^{NOTE}
     :END:"
@@ -159,46 +159,46 @@
 
 (setq org-capture-templates
       `(("c" "Contact" entry
-         (file+headline "~/capture/contacts.org" "Contacts")
+         (file+headline "~/Capture/contacts.org" "Contacts")
          ,core-orgmode-contacts-template :empty-lines 1)
         ("d" "Documentation" entry
          (file+headline "~/Documents/docs.org" "Documentation")
          "** %^{Subject}\n %^g\n %?\n %i\n Added %U")
         ("D" "Definition" entry
-         (file+headline "~/capture/definitions.org" "Definitions")
+         (file+headline "~/Capture/definitions.org" "Definitions")
          "** %^{Term} :: %^{Definition} ")
         ("e" "Expense" entry
-         (file+olp+datetree "~/capture/expenses.org")
+         (file+olp+datetree "~/Capture/expenses.org")
          ,core-orgmode-expenses-template :empty-lines 1)
         ("i" "Idea" entry
-         (file+olp+datetree "~/capture/ideas.org" "Ideas")
-         "** \u{e910} %?\n I had this idea on %U\n %a" :empty-lines 1)
+         (file+olp+datetree "~/Capture/ideas.org" "Ideas")
+         "** \ue910 %?\n I had this idea on %U\n %a" :empty-lines 1)
         ("j" "Journal" entry
-         (file+olp+datetree "~/capture/journal.org")
-         "* \u{e916} %?\n Entered on %U\n" :empty-lines 1)
+         (file+olp+datetree "~/Capture/journal.org")
+         "* \ue916 %?\n Entered on %U\n" :empty-lines 1)
         ("l" "Lyric" entry
-         (file+headline "~/capture/lyrical-ideas.org" "Lyrical Ideas Capture")
+         (file+headline "~/Capture/lyrical-ideas.org" "Lyrical Ideas Capture")
          "** %^{working-title}\n %^{verse}\n %^{hook}\n")
         ("p" "Project" entry
-         (file+olp+datetree "~/Public/projects/oscarfono/projects/current-projects.org")
+         (file+olp+datetree "~/Capture/current-projects.org")
          ,core-orgmode-project-template :empty-lines 1)
         ("Q" "Quote" entry
-         (plain "~/capture/quotes.org")
+         (plain "~/Capture/quotes.org")
          ,core-orgmode-greatquotes-template :empty-lines 1)
         ("r" "Read" entry
-         (file+headline "~/capture/someday.org" "Read")
+         (file+headline "~/Capture/someday.org" "Read")
          "** %^{title}\n %^{author}" :empty-lines 1)
         ("s" "Subject" entry
-         (file+headline "~/capture/someday.org" "Write")
+         (file+headline "~/Capture/someday.org" "Write")
          "** %^{subject}\n" :empty-lines 1)
         ("t" "Todo" entry
-         (file+headline "~/capture/todo.org" "Tasks")
+         (file+headline "~/Capture/todo.org" "Tasks")
          "** TODO %?\n %i\n %a" :empty-lines 1)
         ("W" "Wishlist" plain
-         (plain "~/capture/someday.org" "Wishlist")
+         (plain "~/Capture/someday.org" "Wishlist")
          "** %^{thing}" :empty-lines 1)
         ("w" "Watch" entry
-         (file+headline "~/capture/someday.org" "Watch")
+         (file+headline "~/Capture/someday.org" "Watch")
          "** %^{movie title}\n %a" :empty-lines 1)))
 ;; List of Org-mode capture templates.
 
@@ -230,7 +230,7 @@
 
 (straight-use-package 'ox-hugo
   :config
-  (setq-local org-hugo-base-dir "~/projects/web/hugo/"))
+  (setq-local org-hugo-base-dir "~/Projects"))
 ;; Hugo export backend for Org-mode.
 
 (straight-use-package 'ox-mediawiki)
@@ -280,7 +280,11 @@
 
 ;;;; Finalization
 
-(org-agenda-redo-all)                    ; Refresh all agenda views on load.
+                                        ; Refresh all agenda views on load.
+(with-eval-after-load 'org-agenda
+  (when (get-buffer "*Org Agenda*")
+    (with-current-buffer "*Org Agenda*"
+      (org-agenda-redo-all))))
 
 (provide 'core-orgmode)
 

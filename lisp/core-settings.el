@@ -22,7 +22,7 @@
 (setq inhibit-startup-message t)      ; Disable startup screen.
 (menu-bar-mode 1)                     ; Enable menu bar, unlike previous setups.
 (tool-bar-mode -1)                    ; Disable tool bar.
-(scroll-bar-mode -1)                  ; Disable scroll bars.
+;;(scroll-bar-mode -1)                  ; Disable scroll bars.
 (setq scroll-step 1                   ; Scroll one line at a time.
       scroll-conservatively 10000)    ; Smooth scrolling.
 (setq visible-bell t)                 ; Use visible bell instead of audible.
