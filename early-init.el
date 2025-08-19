@@ -43,7 +43,7 @@
 
 ;; Install Org-mode early
 (use-package org
-  :straight (:type git :repo "https://git.savannah.gnu.org/git/emacs/org-mode.git" :depth 1)
+  :straight (:host nil :type git :repo "https://git.savannah.gnu.org/git/emacs/org-mode.git" :depth 1)
   :ensure t)
 
 (provide 'early-init)

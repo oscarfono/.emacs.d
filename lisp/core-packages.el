@@ -214,6 +214,8 @@
   (lsp-ui-doc-enable nil))
 ;; UI enhancements for LSP-mode.
 
+(use-package nix-mode)
+
 (use-package rust-mode)
 ;; Major mode for Rust programming.
 
