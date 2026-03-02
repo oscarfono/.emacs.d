@@ -126,6 +126,23 @@
   "\n"
   "Cooper Oscarfono \n")
 
+;;;; Skeleton keybindings
+;;
+;; All skeleton bindings live under the C-c s prefix (s for skeleton).
+;; The differentiating letter matches the first letter of the skeleton
+;; name after "core-orgmode-": w=web, b=blog, o=org, a=apa, l=letter.
+;; C-c s is unbound in both stock Emacs and org-mode, making it safe
+;; for user-defined sequences.
+
+(define-prefix-command 'core-orgmode-skeleton-map)
+(global-set-key (kbd "C-c s") 'core-orgmode-skeleton-map)
+
+(define-key core-orgmode-skeleton-map (kbd "w") #'core-orgmode-web-skeleton)
+(define-key core-orgmode-skeleton-map (kbd "b") #'core-orgmode-blog-skeleton)
+(define-key core-orgmode-skeleton-map (kbd "o") #'core-orgmode-org-skeleton)
+(define-key core-orgmode-skeleton-map (kbd "a") #'core-orgmode-apa-skeleton)
+(define-key core-orgmode-skeleton-map (kbd "l") #'core-orgmode-ltr-skeleton)
+
 ;;;; Capture templates
 
 (defvar core-orgmode-contacts-template
