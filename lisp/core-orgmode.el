@@ -22,7 +22,7 @@
 
 ;;;; Global settings
 
-(setq org-startup-folded t)              ; Collapse headlines on file open.
+(setq org-startup-folded t)             ; Collapse headlines on file open.
 (setq org-startup-align-all-tables t)    ; Align tables when opening files.
 (setq org-clock-persist 'history)        ; Persist clock history across sessions.
 (org-clock-persistence-insinuate)        ; Enable clock persistence mechanism.
@@ -200,7 +200,6 @@
         ("w" "Watch" entry
          (file+headline "~/Capture/someday.org" "Watch")
          "** %^{movie title}\n %a" :empty-lines 1)))
-;; List of Org-mode capture templates.
 
 ;;;; Export configuration
 
@@ -223,23 +222,37 @@
                ("\\section{%s}" . "\\section*{%s}")
                ("\\subsection{%s}" . "\\subsection*{%s}")
                ("\\subsubsection{%s}" . "\\subsubsection*{%s}")))
+(add-to-list 'org-latex-classes
+             '("letter"
+               "\\documentclass{letter}
+                \\usepackage[margin=1in]{geometry}
+                [NO-DEFAULT-PACKAGES]
+                [NO-PACKAGES]"
+               ("\\section{%s}" . "\\section*{%s}")
+               ("\\subsection{%s}" . "\\subsection*{%s}")))
+
 (setq org-latex-listings 'minted          ; Use minted for code listings.
       org-latex-packages-alist '(("" "minted")) ; Include minted package.
       org-latex-pdf-process '("pdflatex -shell-escape -interaction nonstopmode -output-directory %o %f"))
-;; LaTeX export settings.
 
-(straight-use-package 'ox-hugo
-  :config
-  (setq-local org-hugo-base-dir "~/Projects"))
-;; Hugo export backend for Org-mode.
+;; Hugo export setup
+(straight-use-package 'ox-hugo)
+(with-eval-after-load 'ox
+  (require 'ox-hugo))
+(setq org-hugo-base-dir "~/Projects")
 
 (straight-use-package 'ox-mediawiki)
-;; MediaWiki export backend for Org-mode.
 
 (setq org-export-backends '(ascii html hugo latex md mediawiki slimhtml))
-;; Enabled export backends.
 
 ;;;; Babel configuration
+
+(setq org-plantuml-jar-path
+      (let ((local-path (expand-file-name "~/.emacs.d/lib/plantuml.jar" default-directory))
+            (global-path "/usr/local/share/plantuml/plantuml.jar"))
+        (if (file-exists-p local-path)
+            local-path
+          global-path)))
 
 (org-babel-do-load-languages
  'org-babel-load-languages
@@ -264,7 +277,6 @@
    (scheme . t)
    (shell . t)
    (sql . t)))
-;; Load languages for Org Babel execution.
 
 ;;;; Calendar settings
 
@@ -277,10 +289,8 @@
 (setq holiday-bahai-holidays nil)        ; Disable Baháʼí holidays.
 (setq holiday-oriental-holidays nil)     ; Disable Oriental holidays.
 
-
 ;;;; Finalization
 
-                                        ; Refresh all agenda views on load.
 (with-eval-after-load 'org-agenda
   (when (get-buffer "*Org Agenda*")
     (with-current-buffer "*Org Agenda*"
