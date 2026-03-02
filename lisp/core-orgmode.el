@@ -72,11 +72,19 @@
   "#+INCLUDE: './components/footer.org' \n")
 
 (define-skeleton core-orgmode-blog-skeleton
-  "Insert header info for a blog file."
-  "\n "
-  "#+TITLE: " str "\n\n"
-  "#+DATE: " (current-time-string) "\n\n"
-  "#+AUTHOR: Cooper Oscarfono \n\n")
+  "Insert ox-hugo compatible header for a Sovereign Miner blog post."
+  "Title: "
+  "#+TITLE: " str "\n"
+  "#+DATE: " (format-time-string "%Y-%m-%d") "\n"
+  "#+AUTHOR: Cooper Oscarfono\n"
+  "#+HUGO_BASE_DIR: ~/Projects/sovereign-miner/hugo\n"
+  "#+HUGO_SECTION: posts\n"
+  "#+HUGO_AUTO_SET_LASTMOD: t\n"
+  "#+HUGO_DRAFT: true\n"
+  "#+DESCRIPTION: " _ "\n"
+  "#+HUGO_TAGS: \n"
+  "#+HUGO_CATEGORIES: \n"
+  "#+OPTIONS: num:nil ^:{}\n")
 
 (define-skeleton core-orgmode-org-skeleton
   "Insert header info for a generic Org file."
