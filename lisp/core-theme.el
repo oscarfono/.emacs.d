@@ -47,6 +47,7 @@
             (message "Theme loaded successfully"))
         (message "Theme file missing: %s" full-path)))))
 
+
 (provide 'core-theme)
 
 ;;; core-theme.el ends here

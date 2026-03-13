@@ -5,7 +5,7 @@
 ;; Maintainer: Cooper Oscarfono <cooper@oscarfono.com>
 ;; Created: March 19, 2025
 ;; Keywords: lisp, tools, configuration
-;; Package-Requires: ((emacs "27.1"))
+;; Package-Requires: ((emacs "29.1"))
 
 ;;; Commentary:
 ;; This file bootstraps `straight.el` and ensures it’s fully initialized...

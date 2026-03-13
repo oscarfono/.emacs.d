@@ -6,7 +6,7 @@
 ;; Maintainer: Cooper Oscarfono <cooper@oscarfono.com>
 ;; Created: March 19, 2025
 ;; Keywords: lisp, packages, configuration
-;; Package-Requires: ((emacs "27.1"))
+;; Package-Requires: ((emacs "29.1"))
 
 ;; This file is not part of GNU Emacs.
 
