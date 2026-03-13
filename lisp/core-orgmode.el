@@ -292,6 +292,7 @@
    (css . t)
    (ditaa . t)
    (dot . t)
+   (emacs-lisp . t)
    (haskell . t)
    (js . t)
    (latex . t)
