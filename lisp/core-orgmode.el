@@ -303,6 +303,11 @@
    (shell . t)
    (sql . t)))
 
+;;;; Handle variable and fixed pitch properly
+(use-package mixed-pitch
+  :hook (org-mode . mixed-pitch-mode))
+
+
 ;;;; Calendar settings
 
 (setq calendar-latitude -40.406925)      ; Latitude for calendar calculations.
