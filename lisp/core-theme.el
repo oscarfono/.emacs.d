@@ -22,9 +22,9 @@
 ;; Install and configure the melancholy theme.
 (use-package melancholy-theme
   :straight (:type git
-             :host github
-             :repo "oscarfono/melancholy-theme"
-             :files ("*.el" "*.elc"))
+                   :host github
+                   :repo "oscarfono/melancholy-theme"
+                   :files ("*.el" "*.elc"))
   :ensure t
   :no-require t             ; Theme files are not libraries; do not `require'.
   :config
@@ -43,8 +43,7 @@
             (message "Custom theme load path: %s" custom-theme-load-path)
             (message "Available themes: %s" (custom-available-themes))
             (message "Loading melancholy theme...")
-            (load-theme 'melancholy t t)  ; Load without prompting.
-            (enable-theme 'melancholy)    ; Explicitly enable the theme
+            (load-theme 'melancholy t )  ; Load without prompting.
             (message "Theme loaded successfully"))
         (message "Theme file missing: %s" full-path)))))
 

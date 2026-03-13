@@ -304,9 +304,23 @@
    (sql . t)))
 
 ;;;; Handle variable and fixed pitch properly
+;;;; Handle variable and fixed pitch properly
 (use-package mixed-pitch
-  :hook (org-mode . mixed-pitch-mode))
-
+  :hook (org-mode . mixed-pitch-mode)
+  :config
+  ;; Ensure all fixed-width org faces stay monospace under mixed-pitch-mode
+  (dolist (face '(org-table
+                  org-block
+                  org-block-begin-line
+                  org-block-end-line
+                  org-code
+                  org-verbatim
+                  org-formula
+                  org-date
+                  org-special-keyword
+                  org-priority
+                  org-tag))
+    (add-to-list 'mixed-pitch-fixed-pitch-faces face)))
 
 ;;;; Calendar settings
 
