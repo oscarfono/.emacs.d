@@ -29,8 +29,8 @@
 
 ;;;; TODOs and priorities
 
-(setq org-agenda-files (list "~/Capture/todo.org"
-                             "~/Capture/contacts.org"))  ; Files for agenda tracking.
+(setq org-agenda-files (list "~/Documents/org/capture/todo.org"
+                             "~/Documents/org/capture/contacts.org"))  ; Files for agenda tracking.
 (setq org-highest-priority ?A)           ; Highest TODO priority.
 (setq org-lowest-priority ?E)            ; Lowest TODO priority.
 (setq org-default-priority ?A)           ; Default TODO priority.
@@ -185,50 +185,50 @@
 
 (setq org-capture-templates
       `(("b" "Birthday" entry
-         (file+headline "~/Capture/contacts.org" "Birthdays")
+         (file+headline "~/Documents/org/capture/contacts.org" "Birthdays")
          "* %^{Name}'s Birthday\n  %^{Date of birth}T\n  :PROPERTIES:\n  :CATEGORY: birthday\n  :END:\n"
          :empty-lines 1)
         ("c" "Contact" entry
-         (file+headline "~/Capture/contacts.org" "Contacts")
+         (file+headline "~/Documents/org/capture/contacts.org" "Contacts")
          ,core-orgmode-contacts-template :empty-lines 1)
         ("d" "Documentation" entry
          (file+headline "~/Documents/docs.org" "Documentation")
          "** %^{Subject}\n %^g\n %?\n %i\n Added %U")
         ("D" "Definition" entry
-         (file+headline "~/Capture/definitions.org" "Definitions")
+         (file+headline "~/Documents/org/capture/definitions.org" "Definitions")
          "** %^{Term} :: %^{Definition} ")
         ("e" "Expense" entry
-         (file+olp+datetree "~/Capture/expenses.org")
+         (file+olp+datetree "~/Documents/org/capture/expenses.org")
          ,core-orgmode-expenses-template :empty-lines 1)
         ("i" "Idea" entry
-         (file+olp+datetree "~/Capture/ideas.org" "Ideas")
+         (file+olp+datetree "~/Documents/org/capture/ideas.org" "Ideas")
          "** \ue910 %?\n I had this idea on %U\n %a" :empty-lines 1)
         ("j" "Journal" entry
-         (file+olp+datetree "~/Capture/journal.org")
+         (file+olp+datetree "~/Documents/org/capture/journal.org")
          "* \ue916 %?\n Entered on %U\n" :empty-lines 1)
         ("l" "Lyric" entry
-         (file+headline "~/Capture/lyrical-ideas.org" "Lyrical Ideas Capture")
+         (file+headline "~/Documents/org/capture/lyrical-ideas.org" "Lyrical Ideas Capture")
          "** %^{working-title}\n %^{verse}\n %^{hook}\n")
         ("p" "Project" entry
-         (file+olp+datetree "~/Capture/current-projects.org")
+         (file+olp+datetree "~/Documents/org/capture/current-projects.org")
          ,core-orgmode-project-template :empty-lines 1)
         ("Q" "Quote" entry
-         (plain "~/Capture/quotes.org")
+         (plain "~/Documents/org/capture/quotes.org")
          ,core-orgmode-greatquotes-template :empty-lines 1)
         ("r" "Read" entry
-         (file+headline "~/Capture/someday.org" "Read")
+         (file+headline "~/Documents/org/capture/someday.org" "Read")
          "** %^{title}\n %^{author}" :empty-lines 1)
         ("s" "Subject" entry
-         (file+headline "~/Capture/someday.org" "Write")
+         (file+headline "~/Documents/org/capture/someday.org" "Write")
          "** %^{subject}\n" :empty-lines 1)
         ("t" "Todo" entry
-         (file+headline "~/Capture/todo.org" "Tasks")
+         (file+headline "~/Documents/org/capture/todo.org" "Tasks")
          "** TODO %?\n %i\n %a" :empty-lines 1)
         ("W" "Wishlist" plain
-         (plain "~/Capture/someday.org" "Wishlist")
+         (plain "~/Documents/org/capture/someday.org" "Wishlist")
          "** %^{thing}" :empty-lines 1)
         ("w" "Watch" entry
-         (file+headline "~/Capture/someday.org" "Watch")
+         (file+headline "~/Documents/org/capture/someday.org" "Watch")
          "** %^{movie title}\n %a" :empty-lines 1)))
 
 ;;;; Export configuration
