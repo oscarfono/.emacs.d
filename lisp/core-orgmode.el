@@ -15,7 +15,7 @@
 ;; This file provides a comprehensive configuration for Org-mode, including
 ;; global settings, TODO workflows, agenda customization, skeleton definitions,
 ;; capture templates, export options, Babel language support, calendar settings,
-;; and keybindings. It is designed to work with the latest Org-mode version
+;; and keybindings.  It is designed to work with the latest Org-mode version
 ;; installed via `straight.el' from `early-init.el'.
 
 ;;; Code:
@@ -29,7 +29,8 @@
 
 ;;;; TODOs and priorities
 
-(setq org-agenda-files (list "~/Capture/todo.org")) ; Files for agenda tracking.
+(setq org-agenda-files (list "~/Capture/todo.org"
+                             "~/Capture/contacts.org"))  ; Files for agenda tracking.
 (setq org-highest-priority ?A)           ; Highest TODO priority.
 (setq org-lowest-priority ?E)            ; Lowest TODO priority.
 (setq org-default-priority ?A)           ; Default TODO priority.
@@ -183,7 +184,11 @@
   "Template for capturing notable quotes in Org-mode.")
 
 (setq org-capture-templates
-      `(("c" "Contact" entry
+      `(("b" "Birthday" entry
+         (file+headline "~/Capture/contacts.org" "Birthdays")
+         "* %^{Name}'s Birthday\n  %^{Date of birth}T\n  :PROPERTIES:\n  :CATEGORY: birthday\n  :END:\n"
+         :empty-lines 1)
+        ("c" "Contact" entry
          (file+headline "~/Capture/contacts.org" "Contacts")
          ,core-orgmode-contacts-template :empty-lines 1)
         ("d" "Documentation" entry
