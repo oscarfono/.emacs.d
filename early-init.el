@@ -84,11 +84,14 @@
 ;;;; Org-mode — installed early so core-orgmode.el gets the
 ;;;; straight-managed version, not the Emacs built-in.
 ;;;; Must happen before any (require 'org).
+;;;;
+;;;; Using the official GitHub mirror (emacs-straight/org-mode) rather than
+;;;; Savannah directly — Savannah is frequently slow/unavailable for cloning.
 ;;;; ============================================================
 
 (use-package org
-  :straight (:host nil :type git
-             :repo "https://git.savannah.gnu.org/git/emacs/org-mode.git"
+  :straight (:host github :repo "emacs-straight/org-mode"
+             :files (:defaults "lisp/*.el" "contrib/lisp/*.el")
              :depth 1)
   :ensure t)
 
