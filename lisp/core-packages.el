@@ -58,7 +58,8 @@
 (use-package multi-term
   :bind (("C-M-SPC" . multi-term)
          ("C-M-]"   . multi-term-next)
-         ("C-M-["   . multi-term-prev))
+         ("C-M-["   . multi-term-prev)
+         ("C-c t"   . multi-term-dedicated-toggle))
   :config
   ;; Use login shell so aliases, functions, and $PATH are present.
   (setq multi-term-program (or (getenv "SHELL") "/bin/bash"))
@@ -67,9 +68,6 @@
   ;; Tell programs the terminal supports 256 colours.
   ;; Without this, ls, git, grep etc. won't emit colour escape codes.
   (setenv "TERM" "xterm-256color")
-
-  ;; Dedicated bottom terminal — toggle with C-c t.
-  (global-set-key (kbd "C-c t") #'multi-term-dedicated-toggle)
   (setq multi-term-dedicated-window-height 20)
   ;; yasnippet intercepts TAB in term buffers — disable it there.
   (add-hook 'term-mode-hook (lambda () (yas-minor-mode -1))))
