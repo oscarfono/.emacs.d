@@ -13,16 +13,12 @@
 
 ;;; Commentary:
 ;;
-;; Installs and loads melancholy-theme from its GitHub repository via
-;; straight.el.  Font configuration for the three font roles used by the
-;; theme (monospace, sans-serif, handwriting) is also handled here.
+;; Installs and loads melancholy-theme via straight.el.
 ;;
-;; BREAKING CHANGES (2026-03-13):
-;;   - Removed manual path construction, directory listing, and existence
-;;     checks from :config — these were debug scaffolding using the private
-;;     `straight--repos-dir' API.  straight.el handles all of this correctly
-;;     on its own.
-;;   - Package-Requires minimum bumped from 27.1 to 29.1.
+;; CHANGES (2026-03-13):
+;;   - Removed manual path construction and straight--repos-dir (private API).
+;;     straight.el adds the repo to load-path automatically; custom-theme-load-path
+;;     only needs the directory straight already manages.
 
 ;;; Code:
 
@@ -31,8 +27,10 @@
              :files ("*.el"))
   :ensure t
   :config
+  ;; straight puts the repo on load-path, but custom-theme-load-path is separate.
   (add-to-list 'custom-theme-load-path
-               (straight--repos-dir "melancholy-theme"))
+               (file-name-directory
+                (locate-file "melancholy-theme.el" load-path)))
   (load-theme 'melancholy t))
 
 (provide 'core-theme)

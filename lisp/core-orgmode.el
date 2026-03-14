@@ -15,14 +15,6 @@
 ;;
 ;; Comprehensive Org-mode configuration: global settings, TODO workflows,
 ;; agenda, skeletons, capture templates, export, Babel, and calendar.
-;;
-;; CHANGES (2026-03-13):
-;;   - Fixed calendar coordinates: was Palmerston North NZ, corrected to
-;;     Kalgoorlie WA (-30.748, 121.466).
-;;   - Renamed skeleton prefix C-c s -> C-c S to avoid shadowing `org-schedule'
-;;     (bound to C-c s in org-mode-map).
-;;   - Normalised ox-hugo and ox-mediawiki to use `use-package' consistently.
-;;   - Package-Requires minimum bumped from 27.1 to 29.1.
 
 ;;; Code:
 
@@ -30,10 +22,10 @@
 ;;;; Global settings
 ;;;; ============================================================
 
-(setq org-startup-folded t)              ; Collapse headlines on file open.
-(setq org-startup-align-all-tables t)    ; Align tables when opening files.
-(setq org-clock-persist 'history)        ; Persist clock history across sessions.
-(org-clock-persistence-insinuate)        ; Enable clock persistence mechanism.
+(setq org-startup-folded t)
+(setq org-startup-align-all-tables t)
+(setq org-clock-persist 'history)
+(org-clock-persistence-insinuate)
 
 ;;;; ============================================================
 ;;;; TODOs and priorities
@@ -42,9 +34,9 @@
 (setq org-agenda-files (list "~/Documents/org/capture/todo.org"
                               "~/Documents/org/capture/contacts.org"))
 
-(setq org-highest-priority ?A)
-(setq org-lowest-priority ?E)
-(setq org-default-priority ?A)
+(setq org-highest-priority ?A
+      org-lowest-priority  ?E
+      org-default-priority ?A)
 
 (setq org-todo-keywords
       '((sequence "TODO(t)" "NEXT(n/)" " >|< IN-PROGRESS(i!)" "⚠ WAIT(w@/!)"
@@ -56,15 +48,15 @@
 ;;;; Agenda customization
 ;;;; ============================================================
 
-(setq org-agenda-include-diary t)
-(setq org-agenda-window-setup 'current-window)
-(setq org-deadline-warning-days 14)
-(setq org-agenda-span 'fortnight)
-(setq org-agenda-skip-scheduled-if-deadline-is-shown t)
-(setq org-agenda-skip-deadline-prewarning-if-scheduled 'pre-scheduled)
-(setq org-agenda-todo-ignore-deadlines 'all)
-(setq org-agenda-todo-ignore-scheduled 'all)
-(setq org-agenda-sorting-strategy
+(setq org-agenda-include-diary t
+      org-agenda-window-setup 'current-window
+      org-deadline-warning-days 14
+      org-agenda-span 'fortnight
+      org-agenda-skip-scheduled-if-deadline-is-shown t
+      org-agenda-skip-deadline-prewarning-if-scheduled 'pre-scheduled
+      org-agenda-todo-ignore-deadlines 'all
+      org-agenda-todo-ignore-scheduled 'all
+      org-agenda-sorting-strategy
       '((agenda deadline-up priority-down)
         (todo priority-down category-keep)
         (tags priority-down category-keep)
@@ -144,7 +136,6 @@
 ;;;; Skeleton keybindings
 ;;
 ;; Prefix: C-c S (capital S) — avoids shadowing `org-schedule' (C-c s).
-;; These are also reachable via C-S-<f2> through C-S-<f6> in core-keybindings.
 
 (define-prefix-command 'core-orgmode-skeleton-map)
 (global-set-key (kbd "C-c S") 'core-orgmode-skeleton-map)
@@ -325,7 +316,7 @@
    (sql        . t)))
 
 ;;;; ============================================================
-;;;; Mixed pitch (variable + fixed width fonts in org buffers)
+;;;; Mixed pitch (variable + fixed width in org buffers)
 ;;;; ============================================================
 
 (use-package mixed-pitch
@@ -338,25 +329,23 @@
     (add-to-list 'mixed-pitch-fixed-pitch-faces face)))
 
 ;;;; ============================================================
-;;;; Calendar settings
+;;;; Calendar — Kalgoorlie, Western Australia
 ;;;; ============================================================
 
-;; Kalgoorlie, Western Australia
-(setq calendar-latitude  -30.748)
-(setq calendar-longitude 121.466)
+(setq calendar-latitude  -30.748
+      calendar-longitude 121.466)
 
-(setq holiday-general-holidays  nil)
-(setq holiday-christian-holidays nil)
-(setq holiday-hebrew-holidays    nil)
-(setq holiday-islamic-holidays   nil)
-(setq holiday-bahai-holidays     nil)
-(setq holiday-oriental-holidays  nil)
+(setq holiday-general-holidays  nil
+      holiday-christian-holidays nil
+      holiday-hebrew-holidays    nil
+      holiday-islamic-holidays   nil
+      holiday-bahai-holidays     nil
+      holiday-oriental-holidays  nil)
 
 ;;;; ============================================================
 ;;;; Keybindings
 ;;;; ============================================================
 
-;; Standard org keybindings recommended by the org manual.
 (global-set-key (kbd "C-c l") #'org-store-link)
 (global-set-key (kbd "C-c a") #'org-agenda)
 (global-set-key (kbd "C-c c") #'org-capture)

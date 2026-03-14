@@ -16,10 +16,15 @@
 ;; General Emacs settings: UI, encoding, file management, personalization,
 ;; and global utility keybindings that have no more specific home.
 ;;
+;; Runs on both macOS and Linux. Platform-specific branches are clearly marked.
+;;
 ;; CHANGES (2026-03-13):
-;;   - Absorbed global utility bindings from core-keybindings.el (now deleted):
-;;     C-c I (edit config), C-c r (revert buffer), M-o (other window).
-;;   - Package-Requires minimum bumped from 27.1 to 29.1.
+;;   - Removed auth-sources (now set once in early-init.el).
+;;   - Removed auth-source-debug (set in early-init.el, disabled after init).
+;;   - Fixed subword-mode: was called at top level, now hooked to prog-mode.
+;;   - Added cross-platform browser and GPG configuration.
+;;   - Absorbed utility keybindings from deleted core-keybindings.el.
+;;   - Package-Requires bumped to 29.1.
 
 ;;; Code:
 
@@ -39,6 +44,9 @@
 (delete-selection-mode 1)
 (setq backward-delete-char-untabify-method 'hungry)
 
+;; subword-mode is buffer-local — hook it, don't call it at top level.
+(add-hook 'prog-mode-hook #'subword-mode)
+
 ;;;; ============================================================
 ;;;; Encoding
 ;;;; ============================================================
@@ -56,7 +64,9 @@
 ;;;; File management
 ;;;; ============================================================
 
+;; Discard customize writes — config lives in version control only.
 (setq custom-file (make-temp-file "emacs-custom"))
+
 (setq default-directory "~/projects/")
 (add-to-list 'load-path (expand-file-name "~/projects/elisp"))
 (setq create-lockfiles nil)
@@ -82,11 +92,39 @@
 (setq user-full-name    "Cooper Oscarfono"
       user-mail-address "cooper@oscarfono.com")
 
-(setq epg-gpg-program "/usr/bin/gpg2")
+;;;; ============================================================
+;;;; GPG — platform-aware
+;;;; ============================================================
+
 (require 'epa-file)
 (epa-file-enable)
-(setq auth-sources '("~/.shh/.authinfo.gpg"))
-(setq auth-source-debug t)
+
+(setq epg-gpg-program
+      (cond ((eq system-type 'darwin)
+             ;; Homebrew gpg on macOS: brew install gnupg
+             (or (executable-find "gpg2")
+                 (executable-find "gpg")
+                 "/usr/local/bin/gpg"))
+            (t
+             ;; Linux standard path
+             "/usr/bin/gpg2")))
+
+;; Disable pinentry passthrough in GUI — lets gpg-agent handle the prompt.
+(setq epa-pinentry-mode 'loopback)
+
+;;;; ============================================================
+;;;; Browser — platform-aware
+;;;; ============================================================
+
+(setq browse-url-browser-function
+      (cond ((eq system-type 'darwin)  'browse-url-default-macosx-browser)
+            (t                          'browse-url-generic)))
+
+(when (eq system-type 'gnu/linux)
+  (setq browse-url-generic-program
+        (or (executable-find "brave-browser")
+            (executable-find "firefox")
+            (executable-find "chromium"))))
 
 ;;;; ============================================================
 ;;;; Garbage collection
@@ -95,6 +133,8 @@
 (setq gc-cons-threshold 10000000)
 (add-hook 'after-init-hook
           (lambda ()
+            ;; Disable auth-source debug logging after init completes.
+            (setq auth-source-debug nil)
             (setq gc-cons-threshold 1000000)))
 
 ;;;; ============================================================
@@ -102,9 +142,11 @@
 ;;;; ============================================================
 
 (fset 'yes-or-no-p 'y-or-n-p)
-(setq browse-url-browser-function 'browse-url-generic
-      browse-url-generic-program  "firefox")
-(subword-mode 1)
+
+;; Emacs server: start if not already running, so emacsclient always works.
+(require 'server)
+(unless (server-running-p)
+  (server-start))
 
 ;;;; ============================================================
 ;;;; Global utility keybindings
