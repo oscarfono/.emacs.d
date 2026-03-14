@@ -5,6 +5,7 @@
 ;; Author: Cooper Oscarfono <cooper@oscarfono.com>
 ;; Maintainer: Cooper Oscarfono <cooper@oscarfono.com>
 ;; Created: March 19, 2025
+;; Last Modified: March 13, 2026
 ;; Keywords: lisp, packages, configuration
 ;; Package-Requires: ((emacs "29.1"))
 
@@ -12,14 +13,28 @@
 
 ;;; Commentary:
 ;;
-;; This file manages package installation and configuration using `straight.el'
-;; integrated with `use-package'.  It organizes packages into categories such as
-;; core utilities, editing enhancements, Org-mode tools, UI improvements,
-;; project management, language tools, and miscellaneous utilities.
+;; Package installation and configuration using `straight.el' with `use-package'.
+;;
+;; BREAKING CHANGES (2026-03-13):
+;;   - Requires Emacs 29.1+ (was 27.1) — built-in treesit is a 29+ feature.
+;;   - Removed `tree-sitter' and `tree-sitter-langs' (third-party packages).
+;;     Replaced with Emacs 29 built-in treesit.
+;;     First-time setup: M-x my/treesit-install-all-grammars
+;;     Requires gcc and git on PATH.
+;;   - Removed `racer' — superseded by rust-analyzer via lsp-mode.
+;;     Install: rustup component add rust-analyzer
+;;   - Removed `rust-mode' — rustic supersedes it; both caused mode conflicts.
+;;   - Removed `company-go' — gopls via lsp-mode handles Go completion.
+;;   - Removed `js2-mode' — replaced by built-in js-ts-mode.
+;;     Action required: rename any js2-mode-hook references to js-ts-mode-hook.
+;;   - Fixed: `rk/rustic-mode-hook' was referenced but never defined anywhere
+;;     in the config. Replaced with an inline hook.
 
 ;;; Code:
 
+;;;; ============================================================
 ;;;; Core utilities
+;;;; ============================================================
 
 (use-package delight)
 ;; Diminish minor modes in the mode line.
@@ -38,7 +53,9 @@
   :bind (("C-M-SPC" . multi-term)))
 ;; Multiple terminal emulator for Emacs.
 
+;;;; ============================================================
 ;;;; Editing enhancements
+;;;; ============================================================
 
 (use-package aggressive-indent
   :config
@@ -77,10 +94,7 @@
 ;; Template system for inserting snippets.
 
 (use-package yasnippet-classic-snippets)
-;; Classic snippet collection for yasnippet.
-
 (use-package yasnippet-snippets)
-;; Additional snippets for yasnippet.
 
 (use-package company
   :bind (:map company-active-map
@@ -90,30 +104,18 @@
          ("M->" . company-select-last))
   :config
   (global-company-mode t))
-;; Completion framework with pluggable backends.
+;; Completion framework. LSP backends take priority when lsp-mode is active.
 
 (use-package company-ansible)
-;; Ansible completion backend.
-
 (use-package company-c-headers)
-;; C header completion.
-
 (use-package company-ctags)
-;; Ctags-based completion.
-
-(use-package company-go)
-;; Go language completion.
-
 (use-package company-nginx)
-;; Nginx completion.
-
 (use-package company-shell)
-;; Shell script completion.
-
 (use-package company-web)
-;; Web development completion.
 
+;;;; ============================================================
 ;;;; Org-mode enhancements
+;;;; ============================================================
 
 (use-package org-bullets
   :config
@@ -135,16 +137,17 @@
   :bind ("C-M-g" . gnuplot))
 ;; Interface to gnuplot for plotting.
 
+;;;; ============================================================
 ;;;; UI and visuals
+;;;; ============================================================
 
 (use-package nerd-icons
   :straight (:type git :host github :repo "rainstormstudio/nerd-icons.el")
   :ensure t
   :if (display-graphic-p)
   :config
-  ;; Install Nerd Fonts if not already present
   (unless (member "Symbols Nerd Font Mono" (font-family-list))
-    (nerd-icons-install-fonts t)))  ; 't' skips confirmation
+    (nerd-icons-install-fonts t)))
 ;; Icon set for enhancing UI elements, including doom-modeline.
 
 (use-package doom-modeline
@@ -152,10 +155,10 @@
   :ensure t
   :hook (after-init . doom-modeline-mode)
   :config
-  (setq doom-modeline-icon t          ; Enable icons
+  (setq doom-modeline-icon t
         doom-modeline-major-mode-icon t
         doom-modeline-buffer-file-name-style 'truncate-upto-project))
-;; A fancy mode line inspired by Doom Emacs, using Nerd Fonts.
+;; Fancy mode line using Nerd Fonts.
 
 (use-package rainbow-mode
   :config
@@ -173,7 +176,9 @@
   (setq speedbar-use-images nil))
 ;; Speedbar integrated into a sidebar.
 
+;;;; ============================================================
 ;;;; Project and version control
+;;;; ============================================================
 
 (use-package projectile
   :config
@@ -186,7 +191,66 @@
   :bind ("C-x g" . magit-status))
 ;; Git interface for Emacs.
 
+;;;; ============================================================
+;;;; Tree-sitter (built-in, Emacs 29+)
+;;;;
+;;;; Replaces the third-party `tree-sitter' / `tree-sitter-langs' packages.
+;;;; First-time setup: M-x my/treesit-install-all-grammars
+;;;; Grammars install to: ~/.emacs.d/tree-sitter/
+;;;; ============================================================
+
+(defvar my/treesit-language-sources
+  '((bash       . ("https://github.com/tree-sitter/tree-sitter-bash"))
+    (c          . ("https://github.com/tree-sitter/tree-sitter-c"))
+    (cpp        . ("https://github.com/tree-sitter/tree-sitter-cpp"))
+    (css        . ("https://github.com/tree-sitter/tree-sitter-css"))
+    (go         . ("https://github.com/tree-sitter/tree-sitter-go"))
+    (gomod      . ("https://github.com/camdencheek/tree-sitter-go-mod"))
+    (javascript . ("https://github.com/tree-sitter/tree-sitter-javascript" "master" "src"))
+    (json       . ("https://github.com/tree-sitter/tree-sitter-json"))
+    (python     . ("https://github.com/tree-sitter/tree-sitter-python"))
+    (rust       . ("https://github.com/tree-sitter/tree-sitter-rust"))
+    (toml       . ("https://github.com/tree-sitter/tree-sitter-toml"))
+    (tsx        . ("https://github.com/tree-sitter/tree-sitter-typescript" "master" "tsx/src"))
+    (typescript . ("https://github.com/tree-sitter/tree-sitter-typescript" "master" "typescript/src"))
+    (yaml       . ("https://github.com/ikatyang/tree-sitter-yaml"))
+    (zig        . ("https://github.com/maxxnino/tree-sitter-zig")))
+  "Grammar sources used by `my/treesit-install-all-grammars'.")
+
+(setq treesit-language-source-alist my/treesit-language-sources)
+
+;; Level 4 enables full highlighting: operators, delimiters, variable
+;; references, property accesses.  Default of 3 leaves these unfontified.
+(setq treesit-font-lock-level 4)
+
+;; Redirect legacy major modes to their ts-mode equivalents when a grammar
+;; is available.  Emacs checks this alist automatically on file open.
+(setq major-mode-remap-alist
+      '((bash-mode       . bash-ts-mode)
+        (c-mode          . c-ts-mode)
+        (c++-mode        . c++-ts-mode)
+        (css-mode        . css-ts-mode)
+        (go-mode         . go-ts-mode)
+        (js-mode         . js-ts-mode)
+        (json-mode       . json-ts-mode)
+        (python-mode     . python-ts-mode)
+        (rust-mode       . rust-ts-mode)
+        (typescript-mode . typescript-ts-mode)
+        (yaml-mode       . yaml-ts-mode)))
+
+(defun my/treesit-install-all-grammars ()
+  "Download and compile all grammars listed in `my/treesit-language-sources'.
+Run once after initial setup, or when adding new languages.
+Requires gcc and git on PATH."
+  (interactive)
+  (mapc #'treesit-install-language-grammar
+        (mapcar #'car my/treesit-language-sources))
+  (message "treesit: grammars installed to %s"
+           (expand-file-name "tree-sitter" user-emacs-directory)))
+
+;;;; ============================================================
 ;;;; Language tools
+;;;; ============================================================
 
 (use-package flycheck
   :config
@@ -212,43 +276,26 @@
   (lsp-ui-peek-always-show t)
   (lsp-ui-sideline-show-hover t)
   (lsp-ui-doc-enable nil))
-;; UI enhancements for LSP-mode.
+;; UI enhancements for lsp-mode.
 
 (use-package nix-mode)
+;; Major mode for Nix expressions.
 
-(use-package rust-mode)
-;; Major mode for Rust programming.
-
+;; rustic provides Rust editing with cargo, clippy, format-on-save, and test
+;; running.  rust-mode and racer are not needed alongside it.
+;; Ensure rust-analyzer is installed: rustup component add rust-analyzer
 (use-package rustic
   :bind (:map rustic-mode-map
          ("M-j" . lsp-ui-imenu)
          ("M-?" . lsp-find-references))
   :config
   (setq rustic-format-on-save t)
-  (add-hook 'rustic-mode-hook #'rk/rustic-mode-hook))
-;; Enhanced Rust mode with LSP integration.
-
-(use-package racer
-  :config
-  (add-hook 'rust-mode-hook #'racer-mode)
-  (add-hook 'rust-mode-hook #'eldoc-mode)
-  (add-hook 'rust-mode-hook #'company-mode))
-;; Rust code completion and navigation.
-
-(use-package tree-sitter
-  :straight (:type git :host github :repo "emacs-tree-sitter/elisp-tree-sitter")
-  :ensure t
-  :config
-  (unless (member '(rustic-mode . rust) tree-sitter-major-mode-language-alist)
-    (setq tree-sitter-major-mode-language-alist
-          (cons '(rustic-mode . rust) tree-sitter-major-mode-language-alist))))
-;; Syntax tree parsing with Tree-sitter.
-
-(use-package tree-sitter-langs
-  :straight (:type git :host github :repo "emacs-tree-sitter/elisp-tree-sitter"
-             :files ("langs/*.el" "langs/queries"))
-  :after tree-sitter)
-;; Language definitions for Tree-sitter.
+  (add-hook 'rustic-mode-hook
+            (lambda ()
+              (lsp)
+              ;; Provide the rust grammar for treesit font-lock in rustic buffers.
+              (when (treesit-ready-p 'rust t)
+                (treesit-parser-create 'rust)))))
 
 (use-package helm
   :config
@@ -268,12 +315,11 @@
 ;; Docker management interface.
 
 (use-package dockerfile-mode)
-;; Mode for editing Dockerfiles.
-
 (use-package docker-compose-mode)
-;; Mode for editing Docker Compose files.
 
+;;;; ============================================================
 ;;;; Other tools
+;;;; ============================================================
 
 (use-package elfeed
   :bind ("C-x w" . elfeed)
@@ -282,10 +328,10 @@
                        "https://sachachua.com/blog/category/emacs-news/feed/")))
 ;; RSS and Atom feed reader.
 
-;; Ensure transient is available for aidermacs
 (use-package transient
   :straight t
   :ensure t)
+;; Required by aidermacs.
 
 (use-package aidermacs
   :straight (:type git :host github :repo "MatthewZMD/aidermacs")
@@ -301,7 +347,7 @@
               (setenv "GOOGLE_API_KEY"
                       (auth-source-pick-first-password :host "api.google.com"
                                                        :user "cooper@adsono.live")))))
-;; AI integration for Emacs.
+;; AI coding assistant via aider.
 
 (provide 'core-packages)
 

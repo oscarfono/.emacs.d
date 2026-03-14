@@ -1,10 +1,11 @@
-;;; core-settings.el --- General Emacs settings  -*- lexical-binding: t; -*-
+;;; core-settings.el --- General Emacs settings -*- lexical-binding: t; -*-
 
 ;; Copyright (C) 2025 Cooper Oscarfono
 ;;
 ;; Author: Cooper Oscarfono <cooper@oscarfono.com>
 ;; Maintainer: Cooper Oscarfono <cooper@oscarfono.com>
 ;; Created: March 19, 2025
+;; Last Modified: March 13, 2026
 ;; Keywords: lisp, configuration
 ;; Package-Requires: ((emacs "29.1"))
 
@@ -12,46 +13,57 @@
 
 ;;; Commentary:
 ;;
-;; This file defines general settings for Emacs, including UI preferences,
-;; encoding, file management, personalization, and miscellaneous tweaks.
-;; It is part of a modular configuration loaded by `init.el'.
+;; General Emacs settings: UI, encoding, file management, personalization,
+;; and global utility keybindings that have no more specific home.
+;;
+;; CHANGES (2026-03-13):
+;;   - Absorbed global utility bindings from core-keybindings.el (now deleted):
+;;     C-c I (edit config), C-c r (revert buffer), M-o (other window).
+;;   - Package-Requires minimum bumped from 27.1 to 29.1.
 
 ;;; Code:
 
-;; Basic UI settings.
-(setq inhibit-startup-message t)      ; Disable startup screen.
-(menu-bar-mode 1)                     ; Enable menu bar, unlike previous setups.
-(tool-bar-mode -1)                    ; Disable tool bar.
-;;(scroll-bar-mode -1)                  ; Disable scroll bars.
-(setq scroll-step 1                   ; Scroll one line at a time.
-      scroll-conservatively 10000)    ; Smooth scrolling.
-(setq visible-bell t)                 ; Use visible bell instead of audible.
-(global-visual-line-mode 1)           ; Enable word wrap globally.
-(column-number-mode 1)                ; Show column numbers in mode line.
-(add-hook 'prog-mode-hook #'display-line-numbers-mode) ; Line numbers in programming modes.
-(delete-selection-mode 1)             ; Allow deleting selected text.
-(setq backward-delete-char-untabify-method 'hungry) ; Backspace deletes tabs aggressively.
+;;;; ============================================================
+;;;; Basic UI
+;;;; ============================================================
 
-;; Encoding settings.
-(setq locale-coding-system 'utf-8)    ; Set locale to UTF-8.
-(set-terminal-coding-system 'utf-8)   ; Terminal encoding.
-(set-keyboard-coding-system 'utf-8)   ; Keyboard encoding.
-(set-selection-coding-system 'utf-8)  ; Selection encoding.
-(prefer-coding-system 'utf-8)         ; Prefer UTF-8 for all coding systems.
-(set-language-environment 'utf-8)     ; Set language environment to UTF-8.
-(set-default-coding-systems 'utf-8)   ; Default coding system.
-(set-buffer-multibyte t)              ; Enable multibyte characters.
+(setq inhibit-startup-message t)
+(menu-bar-mode 1)
+(tool-bar-mode -1)
+(setq scroll-step 1
+      scroll-conservatively 10000)
+(setq visible-bell t)
+(global-visual-line-mode 1)
+(column-number-mode 1)
+(add-hook 'prog-mode-hook #'display-line-numbers-mode)
+(delete-selection-mode 1)
+(setq backward-delete-char-untabify-method 'hungry)
 
-;; File management settings.
-(setq custom-file (make-temp-file "emacs-custom")) ; Temporary custom file.
-(setq default-directory "~/projects/") ; Default working directory.
-(add-to-list 'load-path (expand-file-name "~/projects/elisp")) ; Add custom elisp dir.
-(setq create-lockfiles nil)           ; Disable lock files.
-(setq backup-directory-alist '(("." . "~/.emacs.d/backups/per-save"))) ; Backup directory.
+;;;; ============================================================
+;;;; Encoding
+;;;; ============================================================
+
+(setq locale-coding-system 'utf-8)
+(set-terminal-coding-system 'utf-8)
+(set-keyboard-coding-system 'utf-8)
+(set-selection-coding-system 'utf-8)
+(prefer-coding-system 'utf-8)
+(set-language-environment 'utf-8)
+(set-default-coding-systems 'utf-8)
+(set-buffer-multibyte t)
+
+;;;; ============================================================
+;;;; File management
+;;;; ============================================================
+
+(setq custom-file (make-temp-file "emacs-custom"))
+(setq default-directory "~/projects/")
+(add-to-list 'load-path (expand-file-name "~/projects/elisp"))
+(setq create-lockfiles nil)
+(setq backup-directory-alist '(("." . "~/.emacs.d/backups/per-save")))
 
 (defun force-backup-of-buffer ()
-  "Force a backup of the current buffer before saving.
-This creates a per-session backup on the first save and per-save backups thereafter."
+  "Force a backup before saving: per-session on first save, per-save thereafter."
   (when (not buffer-backed-up)
     (let ((backup-directory-alist '(("" . "~/.emacs.d/backups/per-session")))
           (kept-new-versions 3))
@@ -59,31 +71,53 @@ This creates a per-session backup on the first save and per-save backups thereaf
   (let ((buffer-backed-up nil))
     (backup-buffer)))
 
-(add-hook 'before-save-hook #'force-backup-of-buffer) ; Custom backup function.
-(add-hook 'before-save-hook #'delete-trailing-whitespace) ; Clean trailing whitespace.
-(setq-default indent-tabs-mode nil)   ; Use spaces instead of tabs.
+(add-hook 'before-save-hook #'force-backup-of-buffer)
+(add-hook 'before-save-hook #'delete-trailing-whitespace)
+(setq-default indent-tabs-mode nil)
 
-;; Personalization settings.
-(setq user-full-name "Cooper Oscarfono"
-      user-mail-address "cooper@oscarfono.com") ; User identity.
-(setq epg-gpg-program "/usr/bin/gpg2") ; GPG binary path.
-(require 'epa-file)                   ; Load EasyPG for file encryption.
-(epa-file-enable)                     ; Enable encrypted file handling.
-(setq auth-sources '("~/.shh/.authinfo.gpg")) ; Authentication source.
-(setq auth-source-debug t)            ; Debug authentication.
+;;;; ============================================================
+;;;; Personalization
+;;;; ============================================================
 
-;; Garbage collection settings.
-(setq gc-cons-threshold 10000000)     ; Increase GC threshold during startup.
+(setq user-full-name    "Cooper Oscarfono"
+      user-mail-address "cooper@oscarfono.com")
+
+(setq epg-gpg-program "/usr/bin/gpg2")
+(require 'epa-file)
+(epa-file-enable)
+(setq auth-sources '("~/.shh/.authinfo.gpg"))
+(setq auth-source-debug t)
+
+;;;; ============================================================
+;;;; Garbage collection
+;;;; ============================================================
+
+(setq gc-cons-threshold 10000000)
 (add-hook 'after-init-hook
           (lambda ()
-            "Restore garbage collection threshold after initialization."
             (setq gc-cons-threshold 1000000)))
 
-;; Miscellaneous settings.
-(fset 'yes-or-no-p 'y-or-n-p)         ; Replace yes/no with y/n prompts.
-(setq browse-url-browser-function 'browse-url-generic ; Use generic browser function.
-      browse-url-generic-program "firefox") ; Set Firefox as default browser.
-(subword-mode 1)                      ; Enable subword navigation.
+;;;; ============================================================
+;;;; Miscellaneous
+;;;; ============================================================
+
+(fset 'yes-or-no-p 'y-or-n-p)
+(setq browse-url-browser-function 'browse-url-generic
+      browse-url-generic-program  "firefox")
+(subword-mode 1)
+
+;;;; ============================================================
+;;;; Global utility keybindings
+;;;; ============================================================
+
+(defun core-settings-edit-config ()
+  "Open `~/.emacs.d/init.el' for editing."
+  (interactive)
+  (find-file "~/.emacs.d/init.el"))
+
+(global-set-key (kbd "C-c I") #'core-settings-edit-config)
+(global-set-key (kbd "C-c r") #'revert-buffer)
+(global-set-key (kbd "M-o")   #'other-window)
 
 (provide 'core-settings)
 

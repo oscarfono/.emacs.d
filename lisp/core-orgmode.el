@@ -1,4 +1,4 @@
-;;; core-orgmode.el --- Org-mode configuration for Emacs  -*- lexical-binding: t; -*-
+;;; core-orgmode.el --- Org-mode configuration for Emacs -*- lexical-binding: t; -*-
 
 ;; Copyright (C) 2025 Cooper Oscarfono
 ;;
@@ -7,61 +7,74 @@
 ;; Created: March 19, 2025
 ;; Last Updated: March 13, 2026
 ;; Keywords: lisp, org, productivity
-;; Package-Requires: ((emacs "27.1") (org "9.7"))
+;; Package-Requires: ((emacs "29.1") (org "9.7"))
 
 ;; This file is not part of GNU Emacs.
 
 ;;; Commentary:
 ;;
-;; This file provides a comprehensive configuration for Org-mode, including
-;; global settings, TODO workflows, agenda customization, skeleton definitions,
-;; capture templates, export options, Babel language support, calendar settings,
-;; and keybindings.  It is designed to work with the latest Org-mode version
-;; installed via `straight.el' from `early-init.el'.
+;; Comprehensive Org-mode configuration: global settings, TODO workflows,
+;; agenda, skeletons, capture templates, export, Babel, and calendar.
+;;
+;; CHANGES (2026-03-13):
+;;   - Fixed calendar coordinates: was Palmerston North NZ, corrected to
+;;     Kalgoorlie WA (-30.748, 121.466).
+;;   - Renamed skeleton prefix C-c s -> C-c S to avoid shadowing `org-schedule'
+;;     (bound to C-c s in org-mode-map).
+;;   - Normalised ox-hugo and ox-mediawiki to use `use-package' consistently.
+;;   - Package-Requires minimum bumped from 27.1 to 29.1.
 
 ;;; Code:
 
+;;;; ============================================================
 ;;;; Global settings
+;;;; ============================================================
 
-(setq org-startup-folded t)             ; Collapse headlines on file open.
+(setq org-startup-folded t)              ; Collapse headlines on file open.
 (setq org-startup-align-all-tables t)    ; Align tables when opening files.
 (setq org-clock-persist 'history)        ; Persist clock history across sessions.
 (org-clock-persistence-insinuate)        ; Enable clock persistence mechanism.
 
+;;;; ============================================================
 ;;;; TODOs and priorities
+;;;; ============================================================
 
 (setq org-agenda-files (list "~/Documents/org/capture/todo.org"
-                             "~/Documents/org/capture/contacts.org"))  ; Files for agenda tracking.
-(setq org-highest-priority ?A)           ; Highest TODO priority.
-(setq org-lowest-priority ?E)            ; Lowest TODO priority.
-(setq org-default-priority ?A)           ; Default TODO priority.
+                              "~/Documents/org/capture/contacts.org"))
+
+(setq org-highest-priority ?A)
+(setq org-lowest-priority ?E)
+(setq org-default-priority ?A)
+
 (setq org-todo-keywords
       '((sequence "TODO(t)" "NEXT(n/)" " >|< IN-PROGRESS(i!)" "⚠ WAIT(w@/!)"
                   "|" "DONE(d!)" "✘ KILL(k!)" "➰ PASS(p@/!)")))
-;; Custom TODO sequence with logging.
-(setq org-log-done 'time)                ; Log completion time for DONE tasks.
 
+(setq org-log-done 'time)
+
+;;;; ============================================================
 ;;;; Agenda customization
+;;;; ============================================================
 
-(setq org-agenda-include-diary t)        ; Include Emacs diary in agenda.
-(setq org-agenda-window-setup 'current-window) ; Open agenda in current window.
-(setq org-deadline-warning-days 14)      ; Warn 14 days before deadlines.
-(setq org-agenda-span 'fortnight)        ; Show two weeks in agenda.
-(setq org-agenda-skip-scheduled-if-deadline-is-shown t) ; Skip duplicates.
+(setq org-agenda-include-diary t)
+(setq org-agenda-window-setup 'current-window)
+(setq org-deadline-warning-days 14)
+(setq org-agenda-span 'fortnight)
+(setq org-agenda-skip-scheduled-if-deadline-is-shown t)
 (setq org-agenda-skip-deadline-prewarning-if-scheduled 'pre-scheduled)
-;; No prewarning if task is scheduled.
-(setq org-agenda-todo-ignore-deadlines 'all) ; Ignore deadlines in TODO list.
-(setq org-agenda-todo-ignore-scheduled 'all) ; Ignore scheduled in TODO list.
+(setq org-agenda-todo-ignore-deadlines 'all)
+(setq org-agenda-todo-ignore-scheduled 'all)
 (setq org-agenda-sorting-strategy
       '((agenda deadline-up priority-down)
         (todo priority-down category-keep)
         (tags priority-down category-keep)
         (search category-keep)))
-;; Sorting strategy for agenda views.
-(add-hook 'after-init-hook
-          (lambda () (org-agenda nil "a"))) ; Display agenda on startup.
 
+(add-hook 'after-init-hook (lambda () (org-agenda nil "a")))
+
+;;;; ============================================================
 ;;;; Skeleton definitions
+;;;; ============================================================
 
 (define-skeleton core-orgmode-web-skeleton
   "Insert header info for web pages generated from an Org file."
@@ -130,64 +143,62 @@
 
 ;;;; Skeleton keybindings
 ;;
-;; All skeleton bindings live under the C-c s prefix (s for skeleton).
-;; The differentiating letter matches the first letter of the skeleton
-;; name after "core-orgmode-": w=web, b=blog, o=org, a=apa, l=letter.
-;; C-c s is unbound in both stock Emacs and org-mode, making it safe
-;; for user-defined sequences.
+;; Prefix: C-c S (capital S) — avoids shadowing `org-schedule' (C-c s).
+;; These are also reachable via C-S-<f2> through C-S-<f6> in core-keybindings.
 
 (define-prefix-command 'core-orgmode-skeleton-map)
-(global-set-key (kbd "C-c s") 'core-orgmode-skeleton-map)
-
+(global-set-key (kbd "C-c S") 'core-orgmode-skeleton-map)
 (define-key core-orgmode-skeleton-map (kbd "w") #'core-orgmode-web-skeleton)
 (define-key core-orgmode-skeleton-map (kbd "b") #'core-orgmode-blog-skeleton)
 (define-key core-orgmode-skeleton-map (kbd "o") #'core-orgmode-org-skeleton)
 (define-key core-orgmode-skeleton-map (kbd "a") #'core-orgmode-apa-skeleton)
 (define-key core-orgmode-skeleton-map (kbd "l") #'core-orgmode-ltr-skeleton)
 
+;;;; ============================================================
 ;;;; Capture templates
+;;;; ============================================================
 
 (defvar core-orgmode-contacts-template
   "** %^{contact}
-    :PROPERTIES:
-      :EMAIL: %(org-contacts-template-email)
-      :PHONE: %^{XXX-XXX-XXXX}
-      :ADDRESS: %^{street name. city, state, postcode }
-      :BIRTHDAY: %^{dd-mm-yyyy}t
-      :NOTE: %^{NOTE}
-    :END:"
-  "Template for capturing contact information in Org-mode.")
+:PROPERTIES:
+:EMAIL: %(org-contacts-template-email)
+:PHONE: %^{XXX-XXX-XXXX}
+:ADDRESS: %^{street name. city, state, postcode }
+:BIRTHDAY: %^{dd-mm-yyyy}t
+:NOTE: %^{NOTE}
+:END:"
+  "Template for capturing contact information.")
 
 (defvar core-orgmode-project-template
   "* %^{Project Name}
-   :PROPERTIES:
-     :Customer Name: %^{Customer}
-     :Deadline: %^{dd-mm-yyyy}
-   :END"
-  "Template for capturing project details in Org-mode.")
+:PROPERTIES:
+:Customer Name: %^{Customer}
+:Deadline: %^{dd-mm-yyyy}
+:END"
+  "Template for capturing project details.")
 
 (defvar core-orgmode-expenses-template
   "* %^{expense}
-    :PROPERTIES:
-      :DATE: %U
-      :AMOUNT: %^{$0.00}
-      :PAID_TO: %^{company}
-      :PAYMENT_TYPE: %^{eftpos|cash|effort}
-    :END:"
-  "Template for capturing expenses in Org-mode.")
+:PROPERTIES:
+:DATE: %U
+:AMOUNT: %^{$0.00}
+:PAID_TO: %^{company}
+:PAYMENT_TYPE: %^{eftpos|cash|effort}
+:END:"
+  "Template for capturing expenses.")
 
 (defvar core-orgmode-greatquotes-template
   "* %^{great quote here}
-   :PROPERTIES:
-     :QUOTE: %^{great quote}
-     :ATTRIBUTION: %?
-   :END"
-  "Template for capturing notable quotes in Org-mode.")
+:PROPERTIES:
+:QUOTE: %^{great quote}
+:ATTRIBUTION: %?
+:END"
+  "Template for capturing notable quotes.")
 
 (setq org-capture-templates
       `(("b" "Birthday" entry
          (file+headline "~/Documents/org/capture/contacts.org" "Birthdays")
-         "* %^{Name}'s Birthday\n  %^{Date of birth}T\n  :PROPERTIES:\n  :CATEGORY: birthday\n  :END:\n"
+         "* %^{Name}'s Birthday\n %^{Date of birth}T\n :PROPERTIES:\n :CATEGORY: birthday\n :END:\n"
          :empty-lines 1)
         ("c" "Contact" entry
          (file+headline "~/Documents/org/capture/contacts.org" "Contacts")
@@ -232,115 +243,127 @@
          (file+headline "~/Documents/org/capture/someday.org" "Watch")
          "** %^{movie title}\n %a" :empty-lines 1)))
 
+;;;; ============================================================
 ;;;; Export configuration
+;;;; ============================================================
 
 (require 'ox-latex)
 (unless (boundp 'org-latex-classes)
   (setq org-latex-classes nil))
+
 (add-to-list 'org-latex-classes
-             '("article"
-               "\\documentclass{article}"
+             '("article" "\\documentclass{article}"
                ("\\section{%s}" . "\\section*{%s}")
                ("\\subsection{%s}" . "\\subsection*{%s}")
                ("\\subsubsection{%s}" . "\\subsubsection*{%s}")
                ("\\paragraph{%s}" . "\\paragraph*{%s}")
                ("\\subparagraph{%s}" . "\\subparagraph*{%s}")))
+
 (add-to-list 'org-latex-classes
-             '("book"
-               "\\documentclass{book}"
+             '("book" "\\documentclass{book}"
                ("\\part{%s}" . "\\part*{%s}")
                ("\\chapter{%s}" . "\\chapter*{%s}")
                ("\\section{%s}" . "\\section*{%s}")
                ("\\subsection{%s}" . "\\subsection*{%s}")
                ("\\subsubsection{%s}" . "\\subsubsection*{%s}")))
+
 (add-to-list 'org-latex-classes
              '("letter"
-               "\\documentclass{letter}
-                \\usepackage[margin=1in]{geometry}
-                [NO-DEFAULT-PACKAGES]
-                [NO-PACKAGES]"
+               "\\documentclass{letter} \\usepackage[margin=1in]{geometry} [NO-DEFAULT-PACKAGES] [NO-PACKAGES]"
                ("\\section{%s}" . "\\section*{%s}")
                ("\\subsection{%s}" . "\\subsection*{%s}")))
 
-(setq org-latex-listings 'minted          ; Use minted for code listings.
-      org-latex-packages-alist '(("" "minted")) ; Include minted package.
-      org-latex-pdf-process '("pdflatex -shell-escape -interaction nonstopmode -output-directory %o %f"))
+(setq org-latex-listings 'minted
+      org-latex-packages-alist '(("" "minted"))
+      org-latex-pdf-process
+      '("pdflatex -shell-escape -interaction nonstopmode -output-directory %o %f"))
 
-;; Hugo export setup
-(straight-use-package 'ox-hugo)
-(with-eval-after-load 'ox
-  (require 'ox-hugo))
-(setq org-hugo-base-dir "~/Projects")
+(use-package ox-hugo
+  :straight t
+  :after ox
+  :config
+  (setq org-hugo-base-dir "~/Projects"))
 
-(straight-use-package 'ox-mediawiki)
+(use-package ox-mediawiki
+  :straight t
+  :after ox)
 
 (setq org-export-backends '(ascii html hugo latex md mediawiki slimhtml))
 
+;;;; ============================================================
 ;;;; Babel configuration
+;;;; ============================================================
 
 (setq org-plantuml-jar-path
-      (let ((local-path (expand-file-name "~/.emacs.d/lib/plantuml.jar" default-directory))
-            (global-path "/usr/local/share/plantuml/plantuml.jar"))
-        (if (file-exists-p local-path)
-            local-path
-          global-path)))
+      (let ((local  (expand-file-name "~/.emacs.d/lib/plantuml.jar"))
+            (global "/usr/local/share/plantuml/plantuml.jar"))
+        (if (file-exists-p local) local global)))
 
 (org-babel-do-load-languages
  'org-babel-load-languages
- '((C . t)
-   (calc . t)
-   (clojure . t)
-   (css . t)
-   (ditaa . t)
-   (dot . t)
+ '((C          . t)
+   (calc       . t)
+   (clojure    . t)
+   (css        . t)
+   (ditaa      . t)
+   (dot        . t)
    (emacs-lisp . t)
-   (haskell . t)
-   (js . t)
-   (latex . t)
-   (lisp . t)
-   (ocaml . t)
-   (org . t)
-   (perl . t)
-   (plantuml . t)
-   (python . t)
-   (R . t)
-   (ruby . t)
-   (sass . t)
-   (scheme . t)
-   (shell . t)
-   (sql . t)))
+   (haskell    . t)
+   (js         . t)
+   (latex      . t)
+   (lisp       . t)
+   (ocaml      . t)
+   (org        . t)
+   (perl       . t)
+   (plantuml   . t)
+   (python     . t)
+   (R          . t)
+   (ruby       . t)
+   (sass       . t)
+   (scheme     . t)
+   (shell      . t)
+   (sql        . t)))
 
-;;;; Handle variable and fixed pitch properly
-;;;; Handle variable and fixed pitch properly
+;;;; ============================================================
+;;;; Mixed pitch (variable + fixed width fonts in org buffers)
+;;;; ============================================================
+
 (use-package mixed-pitch
   :hook (org-mode . mixed-pitch-mode)
   :config
-  ;; Ensure all fixed-width org faces stay monospace under mixed-pitch-mode
   (dolist (face '(org-table
-                  org-block
-                  org-block-begin-line
-                  org-block-end-line
-                  org-code
-                  org-verbatim
-                  org-formula
-                  org-date
-                  org-special-keyword
-                  org-priority
-                  org-tag))
+                  org-block org-block-begin-line org-block-end-line
+                  org-code org-verbatim org-formula
+                  org-date org-special-keyword org-priority org-tag))
     (add-to-list 'mixed-pitch-fixed-pitch-faces face)))
 
+;;;; ============================================================
 ;;;; Calendar settings
+;;;; ============================================================
 
-(setq calendar-latitude -40.406925)      ; Latitude for calendar calculations.
-(setq calendar-longitude 175.578386)     ; Longitude for calendar calculations.
-(setq holiday-general-holidays nil)      ; Disable general holidays.
-(setq holiday-christian-holidays nil)    ; Disable Christian holidays.
-(setq holiday-hebrew-holidays nil)       ; Disable Hebrew holidays.
-(setq holiday-islamic-holidays nil)      ; Disable Islamic holidays.
-(setq holiday-bahai-holidays nil)        ; Disable Baháʼí holidays.
-(setq holiday-oriental-holidays nil)     ; Disable Oriental holidays.
+;; Kalgoorlie, Western Australia
+(setq calendar-latitude  -30.748)
+(setq calendar-longitude 121.466)
 
+(setq holiday-general-holidays  nil)
+(setq holiday-christian-holidays nil)
+(setq holiday-hebrew-holidays    nil)
+(setq holiday-islamic-holidays   nil)
+(setq holiday-bahai-holidays     nil)
+(setq holiday-oriental-holidays  nil)
+
+;;;; ============================================================
+;;;; Keybindings
+;;;; ============================================================
+
+;; Standard org keybindings recommended by the org manual.
+(global-set-key (kbd "C-c l") #'org-store-link)
+(global-set-key (kbd "C-c a") #'org-agenda)
+(global-set-key (kbd "C-c c") #'org-capture)
+
+;;;; ============================================================
 ;;;; Finalization
+;;;; ============================================================
 
 (with-eval-after-load 'org-agenda
   (when (get-buffer "*Org Agenda*")
