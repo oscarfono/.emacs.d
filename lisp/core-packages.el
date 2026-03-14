@@ -64,6 +64,10 @@
   (setq multi-term-program (or (getenv "SHELL") "/bin/bash"))
   (setq multi-term-scroll-to-bottom-on-output t)
   (setq multi-term-scroll-show-maximum-output t)
+  ;; Tell programs the terminal supports 256 colours.
+  ;; Without this, ls, git, grep etc. won't emit colour escape codes.
+  (setenv "TERM" "xterm-256color")
+
   ;; Dedicated bottom terminal — toggle with C-c t.
   (global-set-key (kbd "C-c t") #'multi-term-dedicated-toggle)
   (setq multi-term-dedicated-window-height 20)
