@@ -32,7 +32,7 @@
 ;;;; Identity
 ;;;; ============================================================
 
-(setq erc-nick     "oscarfono"
+(setq erc-nick           "oscarfono"
       erc-user-full-name "Cooper Oscarfono"
       erc-email-userid   "cooper@oscarfono.com")
 
@@ -41,8 +41,7 @@
 ;;;; ============================================================
 
 (setq erc-server   "irc.libera.chat"
-      erc-port     6697
-      erc-use-tls  t)
+      erc-port     6697)
 
 ;; Read password from ~/.authinfo.gpg rather than prompting.
 (setq erc-prompt-for-password nil)

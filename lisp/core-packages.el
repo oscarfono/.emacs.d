@@ -5,7 +5,7 @@
 ;; Author: Cooper Oscarfono <cooper@oscarfono.com>
 ;; Maintainer: Cooper Oscarfono <cooper@oscarfono.com>
 ;; Created: March 19, 2025
-;; Last Modified: March 14, 2026
+;; Last Modified: March 15, 2026
 ;; Keywords: lisp, packages, configuration
 ;; Package-Requires: ((emacs "29.1"))
 
@@ -29,6 +29,10 @@
 ;;   - major-mode-remap-alist (must be set before any file opens)
 ;;   - company (global-company-mode needs to be active immediately)
 ;;   - helm (helm-mode must be active for M-x override to work)
+;;
+;; CHANGES (2026-03-15):
+;;   - Added org-contacts (was called in capture template but never installed).
+;;   - Fixed sr-speedbar-max-width (was less than sr-speedbar-width).
 ;;
 ;; CHANGES (2026-03-14):
 ;;   - Deferred: magit, projectile, flycheck, undo-tree, docker,
@@ -55,22 +59,61 @@
   :config
   (exec-path-from-shell-initialize))
 
-(use-package multi-term
-  :bind (("C-M-SPC" . multi-term)
-         ("C-M-]"   . multi-term-next)
-         ("C-M-["   . multi-term-prev)
-         ("C-c t"   . multi-term-dedicated-toggle))
+;; (use-package multi-term
+;;   :bind (("C-M-SPC" . multi-term)
+;;          ("C-M-]"   . multi-term-next)
+;;          ("C-M-["   . multi-term-prev)
+;;          ("C-c t"   . multi-term-dedicated-toggle))
+;;   :config
+;;   ;; Use login shell so aliases, functions, and $PATH are present.
+;;   (setq multi-term-program (or (getenv "SHELL") "/bin/bash"))
+;;   (setq multi-term-scroll-to-bottom-on-output t)
+;;   (setq multi-term-scroll-show-maximum-output t)
+;;   ;; Tell programs the terminal supports 256 colours.
+;;   ;; Without this, ls, git, grep etc. won't emit colour escape codes.
+;;   (setenv "TERM" "xterm-256color")
+;;   (setq multi-term-dedicated-window-height 20)
+;;   ;; yasnippet intercepts TAB in term buffers — disable it there.
+;;   (add-hook 'term-mode-hook (lambda () (yas-minor-mode -1))))
+
+;; ;; We've migrated to eat given multi-term is no longer maintained.
+
+(use-package eat
+  :straight t
+  :bind ("C-c t" . +eat/toggle-dedicated)
+  :init
+  (defun +eat/toggle-dedicated ()
+    "Toggle a dedicated eat terminal at the bottom of the frame."
+    (interactive)
+    (let ((eat-buf (get-buffer "*eat*")))
+      (if (and eat-buf (get-buffer-window eat-buf))
+          (delete-window (get-buffer-window eat-buf))
+        (eat))))
   :config
-  ;; Use login shell so aliases, functions, and $PATH are present.
-  (setq multi-term-program (or (getenv "SHELL") "/bin/bash"))
-  (setq multi-term-scroll-to-bottom-on-output t)
-  (setq multi-term-scroll-show-maximum-output t)
-  ;; Tell programs the terminal supports 256 colours.
-  ;; Without this, ls, git, grep etc. won't emit colour escape codes.
-  (setenv "TERM" "xterm-256color")
-  (setq multi-term-dedicated-window-height 20)
-  ;; yasnippet intercepts TAB in term buffers — disable it there.
-  (add-hook 'term-mode-hook (lambda () (yas-minor-mode -1))))
+  ;; 1. Multi-OS Shell Logic
+  ;; Prioritizes Zsh if available, otherwise falls back to system default
+  (setq explicit-shell-file-name
+        (executable-find "zsh")
+        (or (executable-find "zsh") (getenv "SHELL") "/bin/sh"))
+
+  ;; 2. Window Management (The "Lock")
+  (add-to-list 'display-buffer-alist
+               '("\\*eat\\*"
+                 (display-buffer-in-side-window)
+                 (side . bottom)
+                 (slot . 0)
+                 (window-height . 0.3) ;; 30% of frame height
+                 (window-parameters . ((no-delete-other-windows . t)))))
+
+  ;; 3. Clean Interaction
+  (add-hook 'eat-mode-hook (lambda () (yas-minor-mode -1))))
+
+
+(use-package epa
+  :ensure nil ; Built-in
+  :config
+  (setq epg-gpg-program (executable-find "gpg"))
+  (setq epa-pinentry-mode nil)) ; Let the agent handle the pop-up
 
 ;;;; ============================================================
 ;;;; Editing enhancements
@@ -116,10 +159,10 @@
 
 (use-package company
   :bind (:map company-active-map
-         ("C-n" . company-select-next)
-         ("C-p" . company-select-previous)
-         ("M-<" . company-select-first)
-         ("M->" . company-select-last))
+              ("C-n" . company-select-next)
+              ("C-p" . company-select-previous)
+              ("M-<" . company-select-first)
+              ("M->" . company-select-last))
   :config
   (global-company-mode t))
 ;; Loaded eagerly — global-company-mode must be active from the start.
@@ -136,6 +179,11 @@
 ;;;; Org-mode enhancements
 ;;;; ============================================================
 
+(use-package org-contacts
+  :after org
+  :config
+  (setq org-contacts-files '("~/Documents/org/capture/contacts.org")))
+
 (use-package org-bullets
   :defer t
   :hook (org-mode . org-bullets-mode))
@@ -146,7 +194,7 @@
   :init
   (setq org-brain-path "~/Documents/brain")
   :bind (:map org-mode-map
-         ("C-c b" . org-brain-prefix-map))
+              ("C-c b" . org-brain-prefix-map))
   :config
   (setq org-id-track-globally t
         org-id-locations-file "~/.emacs.d/.org-id-locations")
@@ -193,7 +241,7 @@
   (sr-speedbar-right-side t)
   (speedbar-show-unknown-files t)
   (sr-speedbar-width 50)
-  (sr-speedbar-max-width 35)
+  (sr-speedbar-max-width 60)
   :config
   (setq speedbar-use-images nil))
 
@@ -304,8 +352,8 @@ Requires gcc and git on PATH."
 (use-package rustic
   :defer t
   :bind (:map rustic-mode-map
-         ("M-j" . lsp-ui-imenu)
-         ("M-?" . lsp-find-references))
+              ("M-j" . lsp-ui-imenu)
+              ("M-?" . lsp-find-references))
   :config
   (setq rustic-format-on-save t
         rustic-lsp-client 'lsp-mode)

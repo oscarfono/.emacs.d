@@ -4,7 +4,7 @@
 ;; Author: Cooper Oscarfono <cooper@oscarfono.com>
 ;; Maintainer: Cooper Oscarfono <cooper@oscarfono.com>
 ;; Created: March 19, 2025
-;; Last Modified: March 14, 2026
+;; Last Modified: March 15, 2026
 ;; Keywords: lisp, tools, configuration
 ;; Package-Requires: ((emacs "29.1"))
 
@@ -58,7 +58,7 @@
 ;;;; straight.el bootstrap
 ;;;; ============================================================
 
-(defvar bootstrap-version 6)
+(defvar bootstrap-version 7)
 (let ((bootstrap-file
        (expand-file-name "straight/repos/straight.el/bootstrap.el"
                          user-emacs-directory)))
@@ -91,8 +91,8 @@
 
 (use-package org
   :straight (:host github :repo "emacs-straight/org-mode"
-             :files (:defaults "lisp/*.el" "contrib/lisp/*.el")
-             :depth 1)
+                   :files (:defaults "lisp/*.el" "contrib/lisp/*.el")
+                   :depth 1)
   :ensure t)
 
 (provide 'early-init)
