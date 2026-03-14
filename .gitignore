@@ -1,53 +1,31 @@
-# -*- mode: gitignore; -*-
-
+# --- Binary & Compiled Artifacts ---
 *.elc
-*.rel
-*_archive
-*_flymake.*
-*secret*
+*.pyc
 *~
-./.*
-.\#*
-.cache/
-.cask/
-.dir-locals.el
-.last*
-.lsp*
-.mc-lists.el
-.org-id-locations
-.projectile
-/.emacs.desktop
-/.emacs.desktop.lock
-/auto/
-/elpa/
-/eshell/history
-/eshell/lastdir
-/network-security.data
-/server/
 \#*\#
-auto-save-list
-backups/*
-bookmarks
-dist/
-erc-config.el
-erc-config.org
-flycheck_*.el
+
+# --- Package Management & Dependencies ---
+# 'straight' and 'lib' handle their own builds/clones
+/straight/
+/lib/
+/oer-reveal-org/
+
+# --- Local State & Runtime Data ---
+/auto-save-list/
+/backups/
+/transient/
+/tree-sitter/
+/undo/
+/projects/
+/tutorial/
+/sauce/
+
+# --- Specific State Files ---
+abbrev_defs
 org-clock-save.el
-projectile-bookmarks..mc-lists.el
-eld
-eln-cache/
-projectile-bookmarks.eld
-projectile.cache
-recentf
-secrets/*
-server/*
-session*
-snippets/org-mode/my*
-sod.el
-sod.emacs-listp
-straight/
-themes/
-tramp
-transient/
-true
-url/
+
+# --- Security & Credentials ---
+# Never track secrets or auth tokens
+auth-source
+.authinfo
+.authinfo.gpg

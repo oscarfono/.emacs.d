@@ -1,0 +1,283 @@
+#+TITLE: Cooper's Emacs Configuration
+#+AUTHOR: Cooper Oscarfono
+#+DATE: 2026
+#+OPTIONS: toc:2 num:nil ^:nil
+
+* Overview
+
+A modular Emacs 29.1+ configuration using =straight.el= for package management.
+Runs on macOS and Linux. Optimised for startup performance via deferred loading
+and GC tuning.
+
+* Requirements
+
+| Requirement | Version | Notes |
+|-------------+---------+-----------------------------------------------|
+| Emacs       | 29.1+   | Built-in treesit required                     |
+| git         | any     | For straight.el and grammar compilation       |
+| gcc         | any     | For compiling tree-sitter grammars            |
+| gpg2        | any     | For =~/.shh/.authinfo.gpg= credential storage |
+
+macOS only:
+- Xcode Command Line Tools — =xcode-select --install=
+- Homebrew recommended for gpg2, fonts
+
+* Installation
+
+#+begin_src shell
+# Back up any existing config first
+mv ~/.emacs.d ~/.emacs.d.bak
+
+# Clone
+git clone https://github.com/oscarfono/.emacs.d.git ~/.emacs.d
+
+# Start Emacs — straight.el bootstraps automatically
+emacs
+#+end_src
+
+On first launch straight.el will clone and install all packages. This takes
+several minutes. Watch the =*straight-process*= buffer for progress.
+
+** Post-install: tree-sitter grammars
+
+After packages have installed, compile the language grammars:
+
+#+begin_src
+M-x my/treesit-install-all-grammars
+#+end_src
+
+This compiles grammars for bash, C, C++, CSS, Go, JavaScript, JSON, Python,
+Rust, TypeScript, YAML, Zig and more into =~/.emacs.d/tree-sitter/=.
+
+Grammars are machine-specific and must be recompiled after an Emacs upgrade:
+
+#+begin_src shell
+rm -rf ~/.emacs.d/tree-sitter/
+# Then: M-x my/treesit-install-all-grammars
+#+end_src
+
+** Credentials
+
+Sensitive credentials (API keys, auth tokens) live in =~/.shh/.authinfo.gpg=.
+The =~/.shh/= directory is intentional — a private directory with strict
+permissions, named to resemble =~/.ssh/=.
+
+Format for entries:
+
+#+begin_src
+machine api.anthropic.com login cooper@oscarfono.com password <key>
+machine irc.libera.chat login oscarfono password <pass> port 6697
+#+end_src
+
+* Structure
+
+#+begin_example
+~/.emacs.d/
+├── early-init.el          Startup perf tuning, straight.el bootstrap, org
+├── init.el                Module loader
+├── lisp/
+│   ├── core-theme.el      melancholy-theme via straight
+│   ├── core-settings.el   UI, encoding, file management, utility bindings
+│   ├── core-packages.el   All third-party packages + treesit config
+│   ├── core-orgmode.el    Org-mode: agenda, capture, export, babel
+│   └── core-erc.el        ERC IRC client
+├── lib/
+│   └── plantuml.jar       PlantUML for org-babel diagrams
+├── sauce/
+│   └── emacs-server-on-startup.sh   Daemon startup script (macOS)
+└── snippets/              YASnippet snippet files
+#+end_example
+
+Load order: =core-theme= → =core-settings= → =core-packages= → =core-orgmode= → =core-erc=
+
+* Emacs Server
+
+Running Emacs as a daemon means near-instant file opens via =emacsclient=.
+
+** Linux — systemd (recommended)
+
+#+begin_src shell
+# Create the service file
+mkdir -p ~/.config/systemd/user
+cat > ~/.config/systemd/user/emacs.service << 'END'
+[Unit]
+Description=Emacs daemon
+
+[Service]
+Type=forking
+ExecStart=/usr/bin/emacs --daemon
+ExecStop=/usr/bin/emacsclient --eval "(kill-emacs)"
+Restart=on-failure
+
+[Install]
+WantedBy=default.target
+END
+
+systemctl --user enable --now emacs.service
+#+end_src
+
+** macOS — Login Item
+
+Add =/Applications/Emacs.app= via System Settings → General → Login Items.
+
+** Shell alias (both platforms)
+
+Add to =~/.zshrc=:
+
+#+begin_src shell
+alias e='emacsclient -c -a ""'
+#+end_src
+
+The =-a ""= flag starts a new daemon if one isn't running.
+
+* Key Bindings Cheat Sheet
+
+** Global
+
+| Key         | Command                        | Notes                        |
+|-------------+--------------------------------+------------------------------|
+| =C-c I=     | Edit =init.el=                 |                              |
+| =C-c r=     | Revert buffer                  |                              |
+| =M-o=       | Other window                   |                              |
+| =C-M-SPC=   | New multi-term buffer          |                              |
+| =C-M-]=     | Next terminal buffer           |                              |
+| =C-M-[=     | Previous terminal buffer       |                              |
+| =C-c t=     | Toggle dedicated terminal      | Bottom window, 20 rows       |
+| =C-x g=     | Magit status                   |                              |
+| =C-c p=     | Projectile prefix              |                              |
+| =C-c h=     | Helm mini                      |                              |
+| =M-x=       | Helm M-x                       |                              |
+| =C-c d=     | Docker                         |                              |
+| =C-x w=     | Elfeed (RSS reader)            |                              |
+| =C-x a=     | Aidermacs AI assistant         |                              |
+| =C-c e=     | Connect to IRC (ERC)           |                              |
+| =M-s=       | Toggle sr-speedbar             |                              |
+| =C-M-g=     | Gnuplot                        |                              |
+
+** Org-mode
+
+| Key         | Command                        |
+|-------------+--------------------------------|
+| =C-c l=     | Store link                     |
+| =C-c a=     | Open agenda                    |
+| =C-c c=     | Capture                        |
+| =C-c b=     | Org-brain prefix               |
+
+** Org Skeletons (=C-c S=)
+
+| Key         | Skeleton                       |
+|-------------+--------------------------------|
+| =C-c S w=   | Web page header                |
+| =C-c S b=   | Hugo blog post header          |
+| =C-c S o=   | Generic org header             |
+| =C-c S a=   | APA document header            |
+| =C-c S l=   | LaTeX letter template          |
+
+** Multiple Cursors
+
+| Key             | Command                    |
+|-----------------+----------------------------|
+| =C->=           | Mark next like this        |
+| =C-<=           | Mark previous like this    |
+| =C-c C-<=       | Mark all like this         |
+| =C-S-c C-S-c=   | Edit lines (rectangular)   |
+
+** Undo Tree
+
+| Key         | Command                        |
+|-------------+--------------------------------|
+| =C-x u=     | Visualise undo tree            |
+
+* Theme
+
+[[https://github.com/oscarfono/melancholy-theme][melancholy-theme]] — installed via straight.el from GitHub.
+
+The region highlight colour is configurable. Add to =core-theme.el= before
+=load-theme= to override:
+
+#+begin_src emacs-lisp
+;; Deep cyan (default)
+(setq melancholy-region "#0A3A4A")
+
+;; Muted indigo (alternative)
+(setq melancholy-region "#2A2848")
+#+end_src
+
+Check font availability after loading:
+
+#+begin_src
+M-x melancholy-check-fonts
+#+end_src
+
+* Packages of Note
+
+| Package        | Purpose                                      |
+|----------------+----------------------------------------------|
+| straight.el    | Package manager — pins to exact git commits  |
+| use-package    | Package configuration DSL                    |
+| helm           | Incremental completion (replaces M-x)        |
+| projectile     | Project navigation                           |
+| magit          | Git interface                                |
+| lsp-mode       | Language Server Protocol                     |
+| rustic         | Rust — cargo, clippy, rust-analyzer          |
+| flycheck       | On-the-fly syntax checking                   |
+| org-mode       | Notes, agenda, capture, export, babel        |
+| org-brain      | Mind-mapping and knowledge graph             |
+| aidermacs      | AI coding assistant via aider                |
+| multi-term     | Multiple terminal buffers                    |
+| elfeed         | RSS/Atom feed reader                         |
+| doom-modeline  | Mode line using Nerd Fonts                   |
+| treesit        | Built-in tree-sitter (Emacs 29+)             |
+| yasnippet      | Snippet expansion                            |
+| smartparens    | Paired delimiter handling                    |
+| undo-tree      | Non-linear undo with visualiser              |
+
+* Troubleshooting
+
+** All text is white in a code buffer
+
+The tree-sitter grammar for that language isn't compiled. Run:
+
+#+begin_src
+M-x my/treesit-install-all-grammars
+#+end_src
+
+Then reopen the file or run =M-x typescript-ts-mode= (or the relevant ts-mode).
+
+** version-mismatch warnings for grammars
+
+Emacs was upgraded after the grammars were compiled. Delete and recompile:
+
+#+begin_src shell
+rm -rf ~/.emacs.d/tree-sitter/
+#+end_src
+
+Then =M-x my/treesit-install-all-grammars=.
+
+** straight.el fails to clone org-mode on first install
+
+The org-mode mirror on Savannah is unreliable. The config uses the official
+GitHub mirror (=emacs-straight/org-mode=) which is more stable. If it still
+fails, retry — it's usually transient.
+
+** GPG passphrase prompt doesn't appear
+
+#+begin_src shell
+export GPG_TTY=$(tty)
+gpgconf --kill gpg-agent
+#+end_src
+
+** emacsclient: no server running
+
+Either start the daemon manually:
+
+#+begin_src shell
+emacs --daemon
+#+end_src
+
+Or the config's =server-start= guard in =core-settings.el= should handle this
+automatically when Emacs is opened normally.
+
+* License
+
+GPL-3.0-or-later — same as GNU Emacs itself.
