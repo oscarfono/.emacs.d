@@ -46,7 +46,23 @@
   (exec-path-from-shell-initialize))
 
 (use-package multi-term
-  :bind (("C-M-SPC" . multi-term)))
+  :bind (("C-M-SPC" . multi-term)
+         ("C-M-]"   . multi-term-next)
+         ("C-M-["   . multi-term-prev))
+  :config
+  ;; Use the login shell so aliases, functions, and $PATH are all present.
+  (setq multi-term-program (or (getenv "SHELL") "/bin/bash"))
+
+  ;; Keep the terminal scrolled to the latest output.
+  (setq multi-term-scroll-to-bottom-on-output t)
+  (setq multi-term-scroll-show-maximum-output t)
+
+  ;; Dedicated terminal window at the bottom — toggle with C-c t.
+  (global-set-key (kbd "C-c t") #'multi-term-dedicated-toggle)
+  (setq multi-term-dedicated-window-height 20)
+
+  ;; Don't let yasnippet expand in term buffers — it intercepts TAB.
+  (add-hook 'term-mode-hook (lambda () (yas-minor-mode -1))))
 ;; Multiple terminal emulator for Emacs.
 
 ;;;; ============================================================
