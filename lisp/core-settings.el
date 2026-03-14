@@ -135,7 +135,8 @@
           (lambda ()
             ;; Disable auth-source debug logging after init completes.
             (setq auth-source-debug nil)
-            (setq gc-cons-threshold 1000000)))
+            (setq gc-cons-threshold 16777216)   ; 16mb working value
+            (setq gc-cons-percentage 0.1)))
 
 ;;;; ============================================================
 ;;;; Miscellaneous
