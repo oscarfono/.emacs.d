@@ -382,7 +382,6 @@ Requires gcc and git on PATH."
 
 (use-package aidermacs
   :straight (:type git :host github :repo "MatthewZMD/aidermacs")
-  :ensure t
   :after transient
   :bind ("C-x a" . aidermacs-transient-menu)
   :config
@@ -395,7 +394,13 @@ Requires gcc and git on PATH."
               (setenv "GOOGLE_API_KEY"
                       (auth-source-pick-first-password
                        :host "api.google.com"
-                       :user "cooper.oscarfono@gmail.com")))))
+                       :user "cooper.oscarfono@gmail.com"))
+              (setenv "OPENROUTER_API_KEY"
+                      (auth-source-pick-first-password
+                       :host "api.openrouter.ai"
+                       :user "cooper@oscarfono.com"))))
+  (setq aidermacs-default-chat-mode 'architect)
+  (setq aidermacs-extra-args '("--sonnet")))
 
 (provide 'core-packages)
 
