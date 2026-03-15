@@ -1,31 +1,99 @@
-# --- Binary & Compiled Artifacts ---
+# ============================================================
+# Compiled & Native-Comp Artifacts
+# ============================================================
 *.elc
-*.pyc
-*~
-\#*\#
+*.eln
+/native-lisp/
 
-# --- Package Management & Dependencies ---
-# 'straight' and 'lib' handle their own builds/clones
+# ============================================================
+# Package Management
+# ============================================================
+# straight.el repos and builds — machine-specific, not portable
 /straight/
+
+# Guard against accidental package.el use
+/elpa/
+
+# ============================================================
+# Vendored / Generated Directories
+# ============================================================
+# Managed externally; not source-controlled here
 /lib/
 /oer-reveal-org/
+/tree-sitter/
 
-# --- Local State & Runtime Data ---
+# ============================================================
+# Emacs Runtime & State Files
+# ============================================================
 /auto-save-list/
 /backups/
 /transient/
-/tree-sitter/
 /undo/
-/projects/
+
+# Session / history state — regenerated at runtime
+recentf
+bookmarks
+places
+.emacs.desktop
+.emacs.desktop.lock
+org-clock-save.el
+tramp
+srecode-map.el
+
+# ============================================================
+# Project & Navigation State
+# ============================================================
+/projects
+projectile-bookmarks.eld
+.projectile
+
+# ============================================================
+# LSP / Eglot Workspace Caches
+# ============================================================
+.cache/
+/workspace/
+
+# ============================================================
+# Snippets Build Artifacts
+# ============================================================
+# Keep the snippets/ directory, ignore any compiled output
+snippets/*.elc
+
+# ============================================================
+# Tutorial & Scratch Directories
+# ============================================================
 /tutorial/
 /sauce/
 
-# --- Specific State Files ---
-abbrev_defs
-org-clock-save.el
+# ============================================================
+# Auto-Save & Lockfiles
+# ============================================================
+*~
+\#*\#
+.\#*
 
-# --- Security & Credentials ---
-# Never track secrets or auth tokens
-auth-source
+# ============================================================
+# Security & Credentials
+# ============================================================
+# Never track secrets, auth tokens, or GPG material
 .authinfo
 .authinfo.gpg
+auth-source
+
+# ============================================================
+# OS Noise
+# ============================================================
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+
+# ============================================================
+# Abbrev State
+# ============================================================
+# abbrev_defs is written by Emacs automatically; not useful to track
+abbrev_defs
