@@ -33,13 +33,8 @@
 ;; CHANGES (2026-03-15):
 ;;   - Added org-contacts (was called in capture template but never installed).
 ;;   - Fixed sr-speedbar-max-width (was less than sr-speedbar-width).
-;;
-;; CHANGES (2026-03-14):
-;;   - Deferred: magit, projectile, flycheck, undo-tree, docker,
-;;     elfeed, org-brain, nix-mode, dockerfile-mode, docker-compose-mode,
-;;     package-lint, sr-speedbar, multiple-cursors, aggressive-indent.
-;;   - Replaced global-flycheck-mode with prog-mode hook (loads on demand).
-;;   - multi-term: expanded config with shell, scrolling, dedicated window.
+;;   - Fixed eat: malformed setq for explicit-shell-file-name.
+;;   - Added eat eshell integration hooks.
 
 ;;; Code:
 
@@ -59,25 +54,7 @@
   :config
   (exec-path-from-shell-initialize))
 
-;; (use-package multi-term
-;;   :bind (("C-M-SPC" . multi-term)
-;;          ("C-M-]"   . multi-term-next)
-;;          ("C-M-["   . multi-term-prev)
-;;          ("C-c t"   . multi-term-dedicated-toggle))
-;;   :config
-;;   ;; Use login shell so aliases, functions, and $PATH are present.
-;;   (setq multi-term-program (or (getenv "SHELL") "/bin/bash"))
-;;   (setq multi-term-scroll-to-bottom-on-output t)
-;;   (setq multi-term-scroll-show-maximum-output t)
-;;   ;; Tell programs the terminal supports 256 colours.
-;;   ;; Without this, ls, git, grep etc. won't emit colour escape codes.
-;;   (setenv "TERM" "xterm-256color")
-;;   (setq multi-term-dedicated-window-height 20)
-;;   ;; yasnippet intercepts TAB in term buffers — disable it there.
-;;   (add-hook 'term-mode-hook (lambda () (yas-minor-mode -1))))
-
-;; ;; We've migrated to eat given multi-term is no longer maintained.
-
+;; eat (Emulate A Terminal) — faster than term, truecolor, mouse support.
 (use-package eat
   :straight t
   :bind ("C-c t" . +eat/toggle-dedicated)
@@ -90,30 +67,33 @@
           (delete-window (get-buffer-window eat-buf))
         (eat))))
   :config
-  ;; 1. Multi-OS Shell Logic
-  ;; Prioritizes Zsh if available, otherwise falls back to system default
+  ;; Use zsh if available, fall back to $SHELL or /bin/sh.
   (setq explicit-shell-file-name
-        (executable-find "zsh")
-        (or (executable-find "zsh") (getenv "SHELL") "/bin/sh"))
+        (or (executable-find "zsh")
+            (getenv "SHELL")
+            "/bin/sh"))
 
-  ;; 2. Window Management (The "Lock")
+  ;; Persistent bottom window — 30% of frame height, survives C-x 1.
   (add-to-list 'display-buffer-alist
                '("\\*eat\\*"
                  (display-buffer-in-side-window)
                  (side . bottom)
                  (slot . 0)
-                 (window-height . 0.3) ;; 30% of frame height
+                 (window-height . 0.3)
                  (window-parameters . ((no-delete-other-windows . t)))))
 
-  ;; 3. Clean Interaction
+  ;; Eshell integration — shell prompt annotations, visual command support.
+  (add-hook 'eshell-load-hook #'eat-eshell-mode)
+  (add-hook 'eshell-load-hook #'eat-eshell-visual-command-mode)
+
+  ;; yasnippet intercepts TAB in eat buffers — disable it there.
   (add-hook 'eat-mode-hook (lambda () (yas-minor-mode -1))))
 
-
 (use-package epa
-  :ensure nil ; Built-in
+  :ensure nil                           ; built-in
   :config
   (setq epg-gpg-program (executable-find "gpg"))
-  (setq epa-pinentry-mode nil)) ; Let the agent handle the pop-up
+  (setq epa-pinentry-mode nil))         ; let gpg-agent handle the prompt
 
 ;;;; ============================================================
 ;;;; Editing enhancements
@@ -159,10 +139,10 @@
 
 (use-package company
   :bind (:map company-active-map
-              ("C-n" . company-select-next)
-              ("C-p" . company-select-previous)
-              ("M-<" . company-select-first)
-              ("M->" . company-select-last))
+         ("C-n" . company-select-next)
+         ("C-p" . company-select-previous)
+         ("M-<" . company-select-first)
+         ("M->" . company-select-last))
   :config
   (global-company-mode t))
 ;; Loaded eagerly — global-company-mode must be active from the start.
@@ -194,7 +174,7 @@
   :init
   (setq org-brain-path "~/Documents/brain")
   :bind (:map org-mode-map
-              ("C-c b" . org-brain-prefix-map))
+         ("C-c b" . org-brain-prefix-map))
   :config
   (setq org-id-track-globally t
         org-id-locations-file "~/.emacs.d/.org-id-locations")
@@ -352,8 +332,8 @@ Requires gcc and git on PATH."
 (use-package rustic
   :defer t
   :bind (:map rustic-mode-map
-              ("M-j" . lsp-ui-imenu)
-              ("M-?" . lsp-find-references))
+         ("M-j" . lsp-ui-imenu)
+         ("M-?" . lsp-find-references))
   :config
   (setq rustic-format-on-save t
         rustic-lsp-client 'lsp-mode)
