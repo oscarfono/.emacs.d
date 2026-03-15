@@ -395,7 +395,7 @@ Requires gcc and git on PATH."
               (setenv "GOOGLE_API_KEY"
                       (auth-source-pick-first-password
                        :host "api.google.com"
-                       :user "cooper@adsono.live")))))
+                       :user "cooper.oscarfono@gmail.com")))))
 
 (provide 'core-packages)
 
