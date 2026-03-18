@@ -37,7 +37,7 @@
 ;;;; ============================================================
 
 (setq org-agenda-files (list "~/Documents/org/capture/todo.org"
-                             "~/Documents/org/capture/contacts.org"))
+                              "~/Documents/org/capture/contacts.org"))
 
 (setq org-highest-priority ?A
       org-lowest-priority  ?E
@@ -412,54 +412,77 @@ If it is a path, prepend BASE host."
       href
     (concat base href)))
 
+(defun org-icloud--resolve-redirect (url user pass)
+  "Follow the redirect from URL and return the final URL after redirect.
+iCloud\'s /.well-known/carddav does not respond to PROPFIND directly —
+it issues a 301/302 to the user-specific principal URL.  We do a plain
+GET and extract the Location header (or the final url.el settled on)."
+  (let* ((url-request-method "GET")
+         (url-request-extra-headers
+          `(("Authorization" . ,(concat "Basic "
+                                        (base64-encode-string
+                                         (concat user ":" pass) t)))))
+         (url-request-data nil)
+         (url-http-attempt-keepalives nil)
+         buf final-url)
+    (setq buf (url-retrieve-synchronously url t t 30))
+    (unless buf (error "GET %s returned no response" url))
+    (with-current-buffer buf
+      ;; url.el stores the final URL it landed on in url-http-real-url
+      (setq final-url (when (boundp 'url-http-real-url) url-http-real-url))
+      ;; Fallback: parse Location header from response
+      (unless final-url
+        (goto-char (point-min))
+        (when (re-search-forward "^Location: *\(\S-+\)" nil t)
+          (setq final-url (match-string 1)))))
+    (or (and final-url
+             (if (stringp final-url)
+                 final-url
+               (url-recreate-url final-url)))
+        url)))  ; fall back to original if no redirect detected
+
 (defun org-icloud--discover-addressbook (user pass)
-  "Discover the iCloud addressbook URL via the CardDAV well-known chain."
-  ;; iCloud's /.well-known/carddav redirects to a user-specific URL.
-  ;; url.el follows the redirect automatically, so the response we see is
-  ;; from the redirected location.  The <href> inside may be an absolute URL
-  ;; or an absolute path — handle both.
+  "Discover the iCloud addressbook URL via the CardDAV well-known chain.
 
-  ;; Step 1: well-known -> current-user-principal
-  (let* ((resp1 (org-icloud--propfind
-                 (concat org-icloud-carddav-base "/.well-known/carddav")
-                 "0"
-                 "<?xml version=\"1.0\"?>
-<d:propfind xmlns:d=\"DAV:\">
-  <d:prop><d:current-user-principal/></d:prop>
-</d:propfind>"
-                 user pass))
-         (raw-principal
-          (when (string-match
-                 "current-user-principal[^>]*>[[:space:]]*<[^:>]*:?href[^>]*>\\([^<]+\\)"
-                 resp1)
-            (string-trim (match-string 1 resp1))))
-         (principal-url
-          (when raw-principal
-            (org-icloud--ensure-absolute raw-principal org-icloud-carddav-base))))
-    (unless principal-url
-      (error "CardDAV discovery: could not find current-user-principal in:\n%s" resp1))
+iCloud\'s discovery requires three hops:
+  1. GET /.well-known/carddav  -> follow redirect to principal URL
+  2. PROPFIND principal        -> addressbook-home-set
+  3. Return the addressbook URL"
 
-    ;; Step 2: principal -> addressbook-home-set
-    (let* ((resp2 (org-icloud--propfind
-                   principal-url
-                   "0"
-                   "<?xml version=\"1.0\"?>
+  ;; Step 1: follow the well-known redirect to get the real principal URL
+  (let* ((principal-url
+          (org-icloud--resolve-redirect
+           (concat org-icloud-carddav-base "/.well-known/carddav")
+           user pass)))
+
+    ;; Step 2: PROPFIND the principal for addressbook-home-set
+    (let* ((resp (org-icloud--propfind
+                  principal-url
+                  "0"
+                  "<?xml version=\"1.0\"?>
 <d:propfind xmlns:d=\"DAV:\" xmlns:card=\"urn:ietf:params:xml:ns:carddav\">
-  <d:prop><card:addressbook-home-set/></d:prop>
+  <d:prop>
+    <d:current-user-principal/>
+    <card:addressbook-home-set/>
+  </d:prop>
 </d:propfind>"
-                   user pass))
+                  user pass))
+           ;; Try addressbook-home-set first; fall back to current-user-principal
            (raw-home
-            (when (string-match
-                   "addressbook-home-set[^>]*>[[:space:]]*<[^:>]*:?href[^>]*>\\([^<]+\\)"
-                   resp2)
-              (string-trim (match-string 1 resp2))))
+            (or (when (string-match
+                       "addressbook-home-set[^>]*>[[:space:]]*<[^:>]*:?href[^>]*>\([^<]+\)"
+                       resp)
+                  (string-trim (match-string 1 resp)))
+                (when (string-match
+                       "current-user-principal[^>]*>[[:space:]]*<[^:>]*:?href[^>]*>\([^<]+\)"
+                       resp)
+                  (string-trim (match-string 1 resp)))))
            (home-url
             (when raw-home
               (org-icloud--ensure-absolute raw-home org-icloud-carddav-base))))
       (unless home-url
-        (error "CardDAV discovery: could not find addressbook-home-set in:\n%s" resp2))
+        (error "CardDAV discovery: no addressbook-home-set in:\n%s" resp))
       home-url)))
-
 (defun org-icloud--fetch-vcards (addressbook-url user pass)
   "Return a list of raw vCard strings from ADDRESSBOOK-URL."
   (let ((body (org-icloud--propfind
