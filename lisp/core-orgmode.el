@@ -5,7 +5,7 @@
 ;; Author: Cooper Oscarfono <cooper@oscarfono.com>
 ;; Maintainer: Cooper Oscarfono <cooper@oscarfono.com>
 ;; Created: March 19, 2025
-;; Last Updated: March 15, 2026
+;; Last Updated: March 18, 2026
 ;; Keywords: lisp, org, productivity
 ;; Package-Requires: ((emacs "29.1") (org "9.7"))
 
@@ -16,10 +16,16 @@
 ;; Comprehensive Org-mode configuration: global settings, TODO workflows,
 ;; agenda, skeletons, capture templates, export, Babel, and calendar.
 ;;
+;; CHANGES (2026-03-18):
+;;   - iCloud sync is duplex (org wins on conflict).
+;;   - Removed org-capture-after-finalize-hook — too fragile, caused hangs.
+;;     Push is now manual: C-c i from any contact entry pushes it to iCloud.
+;;   - Birthday capture produces a full contact entry with BIRTHDAY field.
+;;   - vdirsyncer config: conflict_resolution = "a wins" (local/org wins).
+;;
 ;; CHANGES (2026-03-15):
-;;   - Fixed Q and W capture templates (incorrect use of `plain' type/location).
-;;   - Removed hugo and slimhtml from org-export-backends (not auto-registered).
-;;   - Added org-sync-icloud-contacts command.
+;;   - Fixed Q and W capture templates.
+;;   - Removed hugo and slimhtml from org-export-backends.
 
 ;;; Code:
 
@@ -31,6 +37,14 @@
 (setq org-startup-align-all-tables t)
 (setq org-clock-persist 'history)
 (org-clock-persistence-insinuate)
+
+;;;; ============================================================
+;;;; Keybindings
+;;;; ============================================================
+
+(global-set-key (kbd "C-c l") #'org-store-link)
+(global-set-key (kbd "C-c a") #'org-agenda)
+(global-set-key (kbd "C-c c") #'org-capture)
 
 ;;;; ============================================================
 ;;;; TODOs and priorities
@@ -152,18 +166,33 @@
 
 ;;;; ============================================================
 ;;;; Capture templates
+;;;;
+;;;; Birthday (b) produces a full contact entry with BIRTHDAY field,
+;;;; same structure as Contact (c), so it syncs to iCloud as a proper
+;;;; vCard with BDAY set rather than a standalone org date heading.
 ;;;; ============================================================
 
 (defvar core-orgmode-contacts-template
-  "** %^{contact}
+  "** %^{Full name}
 :PROPERTIES:
 :EMAIL: %(org-contacts-template-email)
-:PHONE: %^{XXX-XXX-XXXX}
-:ADDRESS: %^{street name. city, state, postcode }
-:BIRTHDAY: %^{dd-mm-yyyy}t
-:NOTE: %^{NOTE}
+:PHONE: %^{Phone}
+:ADDRESS: %^{Address}
+:BIRTHDAY: %^{Birthday (yyyy-mm-dd)}
+:NOTE: %^{Note}
 :END:"
   "Template for capturing contact information.")
+
+(defvar core-orgmode-birthday-template
+  "** %^{Full name}
+:PROPERTIES:
+:EMAIL:
+:PHONE:
+:ADDRESS:
+:BIRTHDAY: %^{Birthday (yyyy-mm-dd)}
+:NOTE:
+:END:"
+  "Template for a birthday-focused contact entry.")
 
 (defvar core-orgmode-project-template
   "* %^{Project Name}
@@ -193,9 +222,8 @@
 
 (setq org-capture-templates
       `(("b" "Birthday" entry
-         (file+headline "~/Documents/org/capture/contacts.org" "Birthdays")
-         "* %^{Name}'s Birthday\n %^{Date of birth}T\n :PROPERTIES:\n :CATEGORY: birthday\n :END:\n"
-         :empty-lines 1)
+         (file+headline "~/Documents/org/capture/contacts.org" "Contacts")
+         ,core-orgmode-birthday-template :empty-lines 1)
         ("c" "Contact" entry
          (file+headline "~/Documents/org/capture/contacts.org" "Contacts")
          ,core-orgmode-contacts-template :empty-lines 1)
@@ -348,197 +376,210 @@
       holiday-oriental-holidays  nil)
 
 ;;;; ============================================================
-;;;; iCloud contacts sync — pure Elisp, no external dependencies
+;;;; iCloud contacts sync via vdirsyncer — DUPLEX (org wins)
 ;;;;
-;;;; Credentials are read from ~/.shh/.authinfo.gpg:
-;;;;   machine contacts.icloud.com login you@icloud.com password YOUR-APP-PASS
+;;;; vdirsyncer handles iCloud auth and .vcf file sync.
+;;;; Org entries are matched to .vcf files via :VCARD_UID: property.
 ;;;;
-;;;; Generate an app-specific password at appleid.apple.com.
-;;;; iCloud requires one; your main Apple ID password won't work here.
+;;;; SETUP (one-time):
+;;;;   brew install vdirsyncer
+;;;;   vdirsyncer discover && vdirsyncer sync
 ;;;;
-;;;; Usage: M-x org-sync-icloud-contacts
+;;;; ~/.config/vdirsyncer/config — note conflict_resolution = "a wins":
+;;;;
+;;;;   [general]
+;;;;   status_path = "~/.vdirsyncer/status/"
+;;;;
+;;;;   [pair icloud_contacts]
+;;;;   a = "icloud_contacts_local"
+;;;;   b = "icloud_contacts_remote"
+;;;;   collections = ["from b"]
+;;;;   conflict_resolution = "a wins"
+;;;;
+;;;;   [storage icloud_contacts_local]
+;;;;   type = "filesystem"
+;;;;   path = "~/.vdirsyncer/contacts/"
+;;;;   fileext = ".vcf"
+;;;;
+;;;;   [storage icloud_contacts_remote]
+;;;;   type = "carddav"
+;;;;   url = "https://contacts.icloud.com"
+;;;;   username = "you@icloud.com"
+;;;;   password.fetch = ["shell", "gpg --decrypt --quiet ~/.shh/.authinfo.gpg | awk '/contacts.icloud.com/{print $NF}'"]
+;;;;
+;;;; COMMANDS:
+;;;;   M-x org-sync-icloud-contacts         pull: vcf → org
+;;;;   M-x org-sync-icloud-contacts-full    pull: vdirsyncer sync, then vcf → org
+;;;;   C-c i  (on a contact entry)          push: current entry → vcf → iCloud
+;;;;   M-x org-push-icloud-contacts         push: all unpushed entries → iCloud
 ;;;; ============================================================
 
-(require 'url)
-(require 'dom)
-
-(defconst org-icloud-carddav-base "https://contacts.icloud.com"
-  "iCloud CardDAV base URL.")
+(defconst org-icloud-vcf-dir
+  (expand-file-name "~/.vdirsyncer/contacts/card/")
+  "Directory where vdirsyncer stores synced iCloud vCard files.")
 
 (defconst org-icloud-contacts-file
   "~/Documents/org/capture/contacts.org"
   "Org file that receives the synced Contacts heading.")
 
 (defconst org-icloud-contacts-heading "Contacts"
-  "Heading managed by the sync — everything under it is replaced on each run.")
+  "Top-level heading in contacts.org managed by the sync.")
 
-(defun org-icloud--credentials ()
-  "Return (USER . PASSWORD) from ~/.shh/.authinfo.gpg for contacts.icloud.com."
-  (let ((found (auth-source-search :host "contacts.icloud.com" :max 1)))
-    (unless found
-      (user-error
-       "No entry for contacts.icloud.com in ~/.shh/.authinfo.gpg\n\
-Add: machine contacts.icloud.com login you@icloud.com password YOUR-APP-PASS"))
-    (let* ((entry (car found))
-           (user  (plist-get entry :user))
-           (pass  (let ((s (plist-get entry :secret)))
-                    (if (functionp s) (funcall s) s))))
-      (cons user pass))))
-
-(defun org-icloud--propfind (url depth body user pass)
-  "Send a PROPFIND request to URL and return the response body string."
-  (let* ((url-request-method "PROPFIND")
-         (url-request-extra-headers
-          `(("Depth"         . ,depth)
-            ("Content-Type"  . "application/xml; charset=utf-8")
-            ("Authorization" . ,(concat "Basic "
-                                        (base64-encode-string
-                                         (concat user ":" pass) t)))))
-         (url-request-data (encode-coding-string body 'utf-8))
-         ;; Inhibit url.el from prompting for auth — we supply it ourselves.
-         (url-http-attempt-keepalives nil)
-         (buf (url-retrieve-synchronously url t t 30)))
-    (unless buf (error "PROPFIND to %s returned no response" url))
-    (with-current-buffer buf
-      (goto-char (point-min))
-      (re-search-forward "\r?\n\r?\n" nil t) ; skip HTTP headers
-      (decode-coding-string (buffer-substring (point) (point-max)) 'utf-8))))
-
-(defun org-icloud--ensure-absolute (href base)
-  "Return HREF as an absolute URL.
-If HREF is already absolute (starts with http), return it unchanged.
-If it is a path, prepend BASE host."
-  (if (string-match-p "\\`https?://" href)
-      href
-    (concat base href)))
-
-(defun org-icloud--resolve-redirect (url user pass)
-  "Follow the redirect from URL and return the final URL after redirect.
-iCloud\'s /.well-known/carddav does not respond to PROPFIND directly —
-it issues a 301/302 to the user-specific principal URL.  We do a plain
-GET and extract the Location header (or the final url.el settled on)."
-  (let* ((url-request-method "GET")
-         (url-request-extra-headers
-          `(("Authorization" . ,(concat "Basic "
-                                        (base64-encode-string
-                                         (concat user ":" pass) t)))))
-         (url-request-data nil)
-         (url-http-attempt-keepalives nil)
-         buf final-url)
-    (setq buf (url-retrieve-synchronously url t t 30))
-    (unless buf (error "GET %s returned no response" url))
-    (with-current-buffer buf
-      ;; url.el stores the final URL it landed on in url-http-real-url
-      (setq final-url (when (boundp 'url-http-real-url) url-http-real-url))
-      ;; Fallback: parse Location header from response
-      (unless final-url
-        (goto-char (point-min))
-        (when (re-search-forward "^Location: *\(\S-+\)" nil t)
-          (setq final-url (match-string 1)))))
-    (or (and final-url
-             (if (stringp final-url)
-                 final-url
-               (url-recreate-url final-url)))
-        url)))  ; fall back to original if no redirect detected
-
-(defun org-icloud--discover-addressbook (user pass)
-  "Discover the iCloud addressbook URL via the CardDAV well-known chain.
-
-iCloud\'s discovery requires three hops:
-  1. GET /.well-known/carddav  -> follow redirect to principal URL
-  2. PROPFIND principal        -> addressbook-home-set
-  3. Return the addressbook URL"
-
-  ;; Step 1: follow the well-known redirect to get the real principal URL
-  (let* ((principal-url
-          (org-icloud--resolve-redirect
-           (concat org-icloud-carddav-base "/.well-known/carddav")
-           user pass)))
-
-    ;; Step 2: PROPFIND the principal for addressbook-home-set
-    (let* ((resp (org-icloud--propfind
-                  principal-url
-                  "0"
-                  "<?xml version=\"1.0\"?>
-<d:propfind xmlns:d=\"DAV:\" xmlns:card=\"urn:ietf:params:xml:ns:carddav\">
-  <d:prop>
-    <d:current-user-principal/>
-    <card:addressbook-home-set/>
-  </d:prop>
-</d:propfind>"
-                  user pass))
-           ;; Try addressbook-home-set first; fall back to current-user-principal
-           (raw-home
-            (or (when (string-match
-                       "addressbook-home-set[^>]*>[[:space:]]*<[^:>]*:?href[^>]*>\([^<]+\)"
-                       resp)
-                  (string-trim (match-string 1 resp)))
-                (when (string-match
-                       "current-user-principal[^>]*>[[:space:]]*<[^:>]*:?href[^>]*>\([^<]+\)"
-                       resp)
-                  (string-trim (match-string 1 resp)))))
-           (home-url
-            (when raw-home
-              (org-icloud--ensure-absolute raw-home org-icloud-carddav-base))))
-      (unless home-url
-        (error "CardDAV discovery: no addressbook-home-set in:\n%s" resp))
-      home-url)))
-(defun org-icloud--fetch-vcards (addressbook-url user pass)
-  "Return a list of raw vCard strings from ADDRESSBOOK-URL."
-  (let ((body (org-icloud--propfind
-               addressbook-url "1"
-               "<?xml version=\"1.0\"?>
-<d:propfind xmlns:d=\"DAV:\" xmlns:card=\"urn:ietf:params:xml:ns:carddav\">
-  <d:prop><card:address-data/></d:prop>
-</d:propfind>"
-               user pass))
-        vcards)
-    (with-temp-buffer
-      (insert body)
-      (goto-char (point-min))
-      (while (re-search-forward "BEGIN:VCARD\\(\\(?:.\\|\n\\)*?\\)END:VCARD" nil t)
-        (push (concat "BEGIN:VCARD" (match-string 1) "END:VCARD") vcards)))
-    (nreverse vcards)))
+;;; ── vCard parsing ────────────────────────────────────────────
 
 (defun org-icloud--vcard-field (vcard field)
-  "Return the first value of FIELD from raw VCARD string, or \"\"."
-  (if (string-match (concat "^" field "[^:\r\n]*:\\(.*\\)$") vcard)
-      (string-trim (match-string 1 vcard))
+  "Return the first value of FIELD from VCARD string, or \"\".
+Handles TYPE parameters e.g. EMAIL;TYPE=work:..."
+  (catch 'found
+    (dolist (line (split-string vcard "\n"))
+      (let ((line (string-trim line)))
+        (when (string-prefix-p field line)
+          (let ((rest (substring line (length field))))
+            (when (and (> (length rest) 0)
+                       (or (string-prefix-p ":" rest)
+                           (string-prefix-p ";" rest)))
+              (let ((colon (string-search ":" line)))
+                (when colon
+                  (throw 'found (string-trim (substring line (1+ colon)))))))))))
     ""))
 
 (defun org-icloud--vcard-multi (vcard field)
   "Return all values of FIELD in VCARD joined with \"; \"."
   (let (vals)
-    (with-temp-buffer
-      (insert vcard)
-      (goto-char (point-min))
-      (while (re-search-forward (concat "^" field "[^:\r\n]*:\\(.*\\)$") nil t)
-        (push (string-trim (match-string 1)) vals)))
+    (dolist (line (split-string vcard "\n"))
+      (let ((line (string-trim line)))
+        (when (string-prefix-p field line)
+          (let ((rest (substring line (length field))))
+            (when (and (> (length rest) 0)
+                       (or (string-prefix-p ":" rest)
+                           (string-prefix-p ";" rest)))
+              (let ((colon (string-search ":" line)))
+                (when colon
+                  (push (string-trim (substring line (1+ colon))) vals))))))))
     (string-join (nreverse vals) "; ")))
 
 (defun org-icloud--vcard-to-org (vcard)
-  "Convert a raw VCARD string to an org heading entry string."
+  "Convert a raw VCARD string to an org heading entry string.
+Stores UID as :VCARD_UID: for round-trip tracking."
   (let* ((name    (org-icloud--vcard-field vcard "FN"))
+         (uid     (org-icloud--vcard-field vcard "UID"))
          (email   (org-icloud--vcard-multi  vcard "EMAIL"))
          (phone   (org-icloud--vcard-multi  vcard "TEL"))
-         (bday    (org-icloud--vcard-field vcard "BDAY"))
+         (bday    (org-icloud--vcard-field  vcard "BDAY"))
          (note    (replace-regexp-in-string
-                   "[\r\n]+" " "
+                   "[ \t]*\n[ \t]*" " "
                    (org-icloud--vcard-field vcard "NOTE")))
-         ;; ADR: ;;street;city;region;postcode;country
-         (adr-raw (org-icloud--vcard-field vcard "ADR"))
+         (adr-raw (org-icloud--vcard-field  vcard "ADR"))
          (address (when (string-match ";;\\(.*\\)" adr-raw)
                     (string-join
                      (seq-filter (lambda (s) (not (string-empty-p s)))
                                  (split-string (match-string 1 adr-raw) ";"))
                      ", "))))
-    (format "** %s\n:PROPERTIES:\n:EMAIL: %s\n:PHONE: %s\n:ADDRESS: %s\n:BIRTHDAY: %s\n:NOTE: %s\n:ICLOUD_SYNC: %s\n:END:\n"
+    (format "** %s\n:PROPERTIES:\n:EMAIL: %s\n:PHONE: %s\n:ADDRESS: %s\n:BIRTHDAY: %s\n:NOTE: %s\n:VCARD_UID: %s\n:ICLOUD_SYNC: %s\n:END:\n"
             (if (string-empty-p name) "Unknown" name)
             email phone (or address "") bday note
+            (or uid "")
             (format-time-string "%Y-%m-%d"))))
 
+;;; ── vCard generation ─────────────────────────────────────────
+
+(defun org-icloud--make-vcard (name email phone address birthday note uid)
+  "Generate a vCard 3.0 string.  Reuses UID if provided, generates one if not."
+  (let ((uid (if (and uid (not (string-empty-p uid)))
+                 uid
+               (format "%s-%s"
+                       (format-time-string "%Y%m%dT%H%M%S")
+                       (substring (md5 (concat name (format-time-string "%s"))) 0 8)))))
+    (mapconcat #'identity
+               (delq nil
+                     (list "BEGIN:VCARD"
+                           "VERSION:3.0"
+                           (concat "FN:" name)
+                           (concat "N:"
+                                   (let ((parts (reverse (split-string name " " t))))
+                                     (mapconcat #'identity parts ";"))
+                                   ";;;")
+                           (unless (string-empty-p email) (concat "EMAIL:" email))
+                           (unless (string-empty-p phone) (concat "TEL:" phone))
+                           (unless (string-empty-p address) (concat "ADR:;;" address))
+                           (unless (string-empty-p birthday)
+                             (concat "BDAY:" (replace-regexp-in-string "-" "" birthday)))
+                           (unless (string-empty-p note) (concat "NOTE:" note))
+                           (concat "UID:" uid)
+                           "END:VCARD"))
+               "\r\n")))
+
+;;; ── push: current entry → vcf ────────────────────────────────
+
+(defun org-icloud--push-entry-at-point ()
+  "Write the contact entry at point as a .vcf file and run vdirsyncer async.
+Sets :VCARD_UID: and :ICLOUD_SYNC: on the entry after writing."
+  (unless (file-directory-p org-icloud-vcf-dir)
+    (user-error "vCard dir not found: %s — run vdirsyncer discover first"
+                org-icloud-vcf-dir))
+  (let* ((name     (org-get-heading t t t t))
+         (email    (or (org-entry-get nil "EMAIL")    ""))
+         (phone    (or (org-entry-get nil "PHONE")     ""))
+         (address  (or (org-entry-get nil "ADDRESS")   ""))
+         (birthday (or (org-entry-get nil "BIRTHDAY")  ""))
+         (note     (or (org-entry-get nil "NOTE")      ""))
+         (uid      (or (org-entry-get nil "VCARD_UID") ""))
+         (vcard    (org-icloud--make-vcard name email phone address birthday note uid))
+         ;; Extract the UID that ended up in the vCard
+         (actual-uid (when (string-match "UID:\\([^\r\n]+\\)" vcard)
+                       (string-trim (match-string 1 vcard))))
+         (vcf-path  (concat org-icloud-vcf-dir actual-uid ".vcf")))
+    (write-region (concat vcard "\r\n") nil vcf-path nil 'silent)
+    (org-entry-put nil "VCARD_UID"   actual-uid)
+    (org-entry-put nil "ICLOUD_SYNC" (format-time-string "%Y-%m-%d"))
+    (when (executable-find "vdirsyncer")
+      (start-process "vdirsyncer-push" "*vdirsyncer*" "vdirsyncer" "sync"))
+    (message "Pushed \"%s\" to iCloud." name)))
+
+(defun org-icloud-push-contact-at-point ()
+  "Push the contact entry at point to iCloud.
+Bound to C-c i in org-mode buffers visiting contacts.org."
+  (interactive)
+  (unless (string-equal (buffer-file-name)
+                        (expand-file-name org-icloud-contacts-file))
+    (user-error "Not in contacts.org"))
+  (unless (= (org-current-level) 2)
+    (user-error "Point is not on a contact entry (need level 2 heading)"))
+  (org-icloud--push-entry-at-point))
+
+(defun org-push-icloud-contacts ()
+  "Push all contact entries under the Contacts heading to iCloud.
+Skips entries that already have an up-to-date :ICLOUD_SYNC: date."
+  (interactive)
+  (unless (executable-find "vdirsyncer")
+    (user-error "vdirsyncer not found — run: brew install vdirsyncer"))
+  (let ((count 0))
+    (with-current-buffer (find-file-noselect
+                          (expand-file-name org-icloud-contacts-file))
+      (org-map-entries
+       (lambda ()
+         (when (= (org-current-level) 2)
+           (org-icloud--push-entry-at-point)
+           (setq count (1+ count))))
+       (concat "+LEVEL=2")
+       nil))
+    (message "Pushed %d contacts to iCloud." count)))
+
+;;; ── keybinding for per-entry push ────────────────────────────
+
+(defun org-icloud--maybe-bind-push ()
+  "Bind C-c i to push-contact-at-point when visiting contacts.org."
+  (when (and (buffer-file-name)
+             (string-equal (buffer-file-name)
+                           (expand-file-name org-icloud-contacts-file)))
+    (local-set-key (kbd "C-c i") #'org-icloud-push-contact-at-point)))
+
+(add-hook 'org-mode-hook #'org-icloud--maybe-bind-push)
+
+;;; ── pull: vcf → org ──────────────────────────────────────────
+
 (defun org-icloud--write-org (entries)
-  "Replace the managed heading in `org-icloud-contacts-file' with ENTRIES."
+  "Replace the managed Contacts heading in contacts.org with ENTRIES."
   (let* ((file   (expand-file-name org-icloud-contacts-file))
          (sorted (sort (copy-sequence entries)
                        (lambda (a b) (string< (downcase a) (downcase b)))))
@@ -554,42 +595,46 @@ iCloud\'s discovery requires three hops:
       (let* ((original (with-temp-buffer
                          (insert-file-contents file)
                          (buffer-string)))
-             (pattern  (concat "\\(\\* "
-                               (regexp-quote org-icloud-contacts-heading)
-                               "\\(?:\n\\|.\\)*?\\)"
-                               "\\(?=^\\* \\|\\'\\)"))
-             (updated  (if (string-match pattern original)
-                           (replace-match block t t original)
-                         (concat (string-trim-right original)
-                                 "\n\n" block "\n"))))
+             (heading  (concat "* " org-icloud-contacts-heading "\n"))
+             (start    (string-search heading original))
+             (updated
+              (if start
+                  (let ((next (string-search "\n* " original (1+ start))))
+                    (concat (substring original 0 start)
+                            block
+                            (if next (substring original (1+ next)) "")))
+                (concat (string-trim-right original) "\n\n" block "\n"))))
         (write-region updated nil file nil 'silent)))))
 
 (defun org-sync-icloud-contacts ()
-  "Sync iCloud contacts into the Contacts heading of contacts.org.
-Reads credentials from ~/.shh/.authinfo.gpg — see file header for format."
+  "Convert vCards from `org-icloud-vcf-dir' into contacts.org.
+Preserves :VCARD_UID: on each entry for duplex sync.
+Run `org-sync-icloud-contacts-full' to pull from iCloud first."
   (interactive)
-  (message "Syncing iCloud contacts...")
-  (condition-case err
-      (let* ((creds   (org-icloud--credentials))
-             (user    (car creds))
-             (pass    (cdr creds))
-             (ab-url  (org-icloud--discover-addressbook user pass))
-             (vcards  (org-icloud--fetch-vcards ab-url user pass))
-             (entries (mapcar #'org-icloud--vcard-to-org vcards)))
-        (org-icloud--write-org entries)
-        (org-revert-all-org-buffers)
-        (message "iCloud contacts synced -- %d contacts." (length entries)))
-    ;; Catch both error and user-error (user-error is a subtype but not of error)
-    ((error user-error)
-     (message "iCloud sync failed: %s" (error-message-string err)))))
+  (unless (file-directory-p org-icloud-vcf-dir)
+    (user-error "vCard dir not found: %s\nRun: vdirsyncer discover && vdirsyncer sync"
+                org-icloud-vcf-dir))
+  (let* ((files   (directory-files org-icloud-vcf-dir t "\\.vcf\\'"))
+         (vcards  (mapcar (lambda (f)
+                            (with-temp-buffer
+                              (insert-file-contents f)
+                              (buffer-string)))
+                          files))
+         (entries (mapcar #'org-icloud--vcard-to-org vcards)))
+    (org-icloud--write-org entries)
+    (org-revert-all-org-buffers)
+    (message "iCloud contacts synced -- %d contacts." (length entries))))
 
-;;;; ============================================================
-;;;; Keybindings
-;;;; ============================================================
-
-(global-set-key (kbd "C-c l") #'org-store-link)
-(global-set-key (kbd "C-c a") #'org-agenda)
-(global-set-key (kbd "C-c c") #'org-capture)
+(defun org-sync-icloud-contacts-full ()
+  "Run vdirsyncer to pull from iCloud, then convert vCards to org."
+  (interactive)
+  (unless (executable-find "vdirsyncer")
+    (user-error "vdirsyncer not found — run: brew install vdirsyncer"))
+  (message "Running vdirsyncer...")
+  (let ((exit (call-process "vdirsyncer" nil "*vdirsyncer*" nil "sync")))
+    (if (zerop exit)
+        (org-sync-icloud-contacts)
+      (message "vdirsyncer failed — see *vdirsyncer* buffer"))))
 
 ;;;; ============================================================
 ;;;; Finalization
