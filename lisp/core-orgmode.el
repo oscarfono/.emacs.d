@@ -101,15 +101,18 @@
   "Insert ox-hugo compatible header for a Sovereign Miner blog post."
   "Title: "
   "#+TITLE: " str "\n"
-  "#+DATE: " (format-time-string "%Y-%m-%d") "\n"
-  "#+AUTHOR: Cooper Oscarfono\n"
+  "#+DATE: " (format-time-string "%Y-%m-%dT%H:%M:%S+08:00") "\n"
+  "#+AUTHOR: The Sovereign Miner\n"
   "#+HUGO_BASE_DIR: ~/Projects/sovereign-miner/hugo\n"
-  "#+HUGO_SECTION: posts\n"
+  "#+HUGO_SECTION: blog\n"
   "#+HUGO_AUTO_SET_LASTMOD: t\n"
   "#+HUGO_DRAFT: true\n"
+  "#+HUGO_CUSTOM_FRONT_MATTER: :image \"/images/image-placeholder.png\"\n"
+  "#+HUGO_CUSTOM_FRONT_MATTER: :author \"the-sovereign-miner\"\n"
+  "#+HUGO_CUSTOM_FRONT_MATTER: :slug \"\"\n"
   "#+DESCRIPTION: " _ "\n"
-  "#+HUGO_TAGS: \n"
-  "#+HUGO_CATEGORIES: \n"
+  "#+HUGO_TAGS: fifo mining western-australia\n"
+  "#+HUGO_CATEGORIES: FIFO Life\n"
   "#+OPTIONS: num:nil ^:{}\n")
 
 (define-skeleton core-orgmode-org-skeleton

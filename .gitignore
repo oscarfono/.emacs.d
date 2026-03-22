@@ -48,10 +48,11 @@ projectile-bookmarks.eld
 .projectile
 
 # ============================================================
-# LSP / Eglot Workspace Caches
+# Workspace/Caches
 # ============================================================
 .cache/
 /workspace/
+.org-id-locations
 
 # ============================================================
 # Snippets Build Artifacts
