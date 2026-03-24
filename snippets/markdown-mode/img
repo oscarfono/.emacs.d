@@ -1,0 +1,7 @@
+# -*- mode: snippet -*-
+# name: Hugo Responsive Image
+# key: img
+# contributor: Cooper Oscarfono
+# --
+{{< image src="${1:images/image-placeholder.png}" alt="${2:Image description}" >}}
+$0

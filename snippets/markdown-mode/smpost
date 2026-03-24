@@ -1,0 +1,19 @@
+# -*- mode: snippet -*-
+# name: Sovereign Miner Blog Post
+# key: smpost
+# contributor: Cooper Oscarfono
+# --
+---
+title: "${1:Title}"
+meta_title: "${2:$1}"
+description: "${3:A short description for SEO and social sharing.}"
+date: `(format-time-string "%Y-%m-%dT%H:%M:%S+08:00")`
+image: "/images/${4:image-placeholder.png}"
+categories: ["${5:$(yas-choose-value '(\"FIFO Life\" \"Money\" \"The Exit\"))}"]
+author: "the-sovereign-miner"
+tags: ["${6:fifo}", "${7:mining}", "${8:western-australia}"]
+slug: "${9:$(replace-regexp-in-string \"[^a-z0-9-]\" \"\" (replace-regexp-in-string \" \" \"-\" (downcase (yas-text))))}"
+draft: true
+---
+
+$0

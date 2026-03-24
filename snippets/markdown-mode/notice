@@ -1,0 +1,9 @@
+# -*- mode: snippet -*-
+# name: Hugo Notice Shortcode
+# key: notice
+# contributor: Cooper Oscarfono
+# --
+{{< notice "${1:$(yas-choose-value '("info" "tip" "warning" "danger" "success" "question" "abstract" "quote"))}" >}}
+${2:Content goes here.}
+{{< /notice >}}
+$0

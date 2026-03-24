@@ -1,0 +1,9 @@
+# -*- mode: snippet -*-
+# name: Hugo Accordion Shortcode
+# key: accordion
+# contributor: Cooper Oscarfono
+# --
+{{< accordion title="${1:Accordion Title}" class="${2:}" >}}
+${3:Content goes here.}
+{{< /accordion >}}
+$0

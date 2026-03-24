@@ -1,0 +1,7 @@
+# -*- mode: snippet -*-
+# name: Hugo Button Shortcode
+# key: button
+# contributor: Cooper Oscarfono
+# --
+{{< button label="${1:Button Text}" link="${2:https://}" style="${3:$(yas-choose-value '("solid" "outline"))}" >}}
+$0
