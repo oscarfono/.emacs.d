@@ -220,8 +220,8 @@
   :custom
   (sr-speedbar-right-side t)
   (speedbar-show-unknown-files t)
-  (sr-speedbar-width 50)
-  (sr-speedbar-max-width 60)
+  (sr-speedbar-width 100)
+  (sr-speedbar-max-width 150)
   :config
   (setq speedbar-use-images nil))
 
