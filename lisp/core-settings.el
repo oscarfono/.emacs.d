@@ -5,7 +5,7 @@
 ;; Author: Cooper Oscarfono <cooper@oscarfono.com>
 ;; Maintainer: Cooper Oscarfono <cooper@oscarfono.com>
 ;; Created: March 19, 2025
-;; Last Modified: March 13, 2026
+;; Last Modified: March 29, 2026
 ;; Keywords: lisp, configuration
 ;; Package-Requires: ((emacs "29.1"))
 
@@ -16,15 +16,19 @@
 ;; General Emacs settings: UI, encoding, file management, personalization,
 ;; and global utility keybindings that have no more specific home.
 ;;
-;; Runs on both macOS and Linux. Platform-specific branches are clearly marked.
+;; Runs on both macOS and Linux.  Platform-specific branches are clearly marked.
+;;
+;; CHANGES (2026-03-29):
+;; - Redirect auto-save files (#...#) to ~/.emacs.d/auto-save/.
+;; - Redirect undo-tree history files to ~/.emacs.d/undo/.
 ;;
 ;; CHANGES (2026-03-13):
-;;   - Removed auth-sources (now set once in early-init.el).
-;;   - Removed auth-source-debug (set in early-init.el, disabled after init).
-;;   - Fixed subword-mode: was called at top level, now hooked to prog-mode.
-;;   - Added cross-platform browser and GPG configuration.
-;;   - Absorbed utility keybindings from deleted core-keybindings.el.
-;;   - Package-Requires bumped to 29.1.
+;; - Removed auth-sources (now set once in early-init.el).
+;; - Removed auth-source-debug (set in early-init.el, disabled after init).
+;; - Fixed subword-mode: was called at top level, now hooked to prog-mode.
+;; - Added cross-platform browser and GPG configuration.
+;; - Absorbed utility keybindings from deleted core-keybindings.el.
+;; - Package-Requires bumped to 29.1.
 
 ;;; Code:
 
@@ -69,7 +73,9 @@
 
 (setq default-directory "~/projects/")
 (add-to-list 'load-path (expand-file-name "~/projects/elisp"))
+
 (setq create-lockfiles nil)
+
 (setq backup-directory-alist '(("." . "~/.emacs.d/backups/per-save")))
 
 (defun force-backup-of-buffer ()
@@ -83,13 +89,24 @@
 
 (add-hook 'before-save-hook #'force-backup-of-buffer)
 (add-hook 'before-save-hook #'delete-trailing-whitespace)
+
 (setq-default indent-tabs-mode nil)
+
+;; Redirect auto-save files (#...#) away from project directories.
+(let ((auto-save-dir (expand-file-name "~/.emacs.d/auto-save/")))
+  (make-directory auto-save-dir :parents)
+  (setq auto-save-file-name-transforms
+        `((".*" ,auto-save-dir t))))
+
+;; Redirect undo-tree history files to the dedicated undo directory.
+(setq undo-tree-history-directory-alist
+      `(("." . ,(expand-file-name "~/.emacs.d/undo/"))))
 
 ;;;; ============================================================
 ;;;; Personalization
 ;;;; ============================================================
 
-(setq user-full-name    "Cooper Oscarfono"
+(setq user-full-name "Cooper Oscarfono"
       user-mail-address "cooper@oscarfono.com")
 
 ;;;; ============================================================
@@ -98,16 +115,16 @@
 
 (require 'epa-file)
 (epa-file-enable)
-
 (setq epg-gpg-program
-      (cond ((eq system-type 'darwin)
-             ;; Homebrew gpg on macOS: brew install gnupg
-             (or (executable-find "gpg2")
-                 (executable-find "gpg")
-                 "/usr/local/bin/gpg"))
-            (t
-             ;; Linux standard path
-             "/usr/bin/gpg2")))
+      (cond
+       ((eq system-type 'darwin)
+        ;; Homebrew gpg on macOS: brew install gnupg
+        (or (executable-find "gpg2")
+            (executable-find "gpg")
+            "/usr/local/bin/gpg"))
+       (t
+        ;; Linux standard path
+        "/usr/bin/gpg2")))
 
 ;; Disable pinentry passthrough in GUI — lets gpg-agent handle the prompt.
 (setq epa-pinentry-mode 'loopback)
@@ -117,8 +134,9 @@
 ;;;; ============================================================
 
 (setq browse-url-browser-function
-      (cond ((eq system-type 'darwin)  'browse-url-default-macosx-browser)
-            (t                          'browse-url-generic)))
+      (cond
+       ((eq system-type 'darwin) 'browse-url-default-macosx-browser)
+       (t 'browse-url-generic)))
 
 (when (eq system-type 'gnu/linux)
   (setq browse-url-generic-program
@@ -135,7 +153,7 @@
           (lambda ()
             ;; Disable auth-source debug logging after init completes.
             (setq auth-source-debug nil)
-            (setq gc-cons-threshold 16777216)   ; 16mb working value
+            (setq gc-cons-threshold 16777216) ; 16mb working value
             (setq gc-cons-percentage 0.1)))
 
 ;;;; ============================================================
@@ -160,8 +178,7 @@
 
 (global-set-key (kbd "C-c I") #'core-settings-edit-config)
 (global-set-key (kbd "C-c r") #'revert-buffer)
-(global-set-key (kbd "M-o")   #'other-window)
+(global-set-key (kbd "M-o") #'other-window)
 
 (provide 'core-settings)
-
 ;;; core-settings.el ends here
