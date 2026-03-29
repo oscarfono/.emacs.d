@@ -19,6 +19,8 @@
 ;; Runs on both macOS and Linux.  Platform-specific branches are clearly marked.
 ;;
 ;; CHANGES (2026-03-29):
+;; - Removed global default-directory: was causing Magit (C-x g) to open
+;;   ~/projects/ instead of the current buffer's repo.
 ;; - Redirect auto-save files (#...#) to ~/.emacs.d/auto-save/.
 ;; - Redirect undo-tree history files to ~/.emacs.d/undo/.
 ;;
@@ -71,7 +73,6 @@
 ;; Discard customize writes — config lives in version control only.
 (setq custom-file (make-temp-file "emacs-custom"))
 
-(setq default-directory "~/projects/")
 (add-to-list 'load-path (expand-file-name "~/projects/elisp"))
 
 (setq create-lockfiles nil)
