@@ -5,7 +5,7 @@
 ;; Author: Cooper Oscarfono <cooper@oscarfono.com>
 ;; Maintainer: Cooper Oscarfono <cooper@oscarfono.com>
 ;; Created: March 19, 2025
-;; Last Updated: March 18, 2026
+;; Last Updated: July 26, 2026
 ;; Keywords: lisp, org, productivity
 ;; Package-Requires: ((emacs "29.1") (org "9.7"))
 
@@ -15,6 +15,10 @@
 ;;
 ;; Comprehensive Org-mode configuration: global settings, TODO workflows,
 ;; agenda, skeletons, capture templates, export, Babel, and calendar.
+;;
+;; CHANGES (2026-07-26):
+;;   - added org-modern
+;;   - corrected issue with skeleton templates
 ;;
 ;; CHANGES (2026-03-18):
 ;;   - iCloud sync is duplex (org wins on conflict).
@@ -58,8 +62,8 @@
       org-default-priority ?A)
 
 (setq org-todo-keywords
-      '((sequence "TODO(t)" "NEXT(n/)" " >|< IN-PROGRESS(i!)" "⚠ WAIT(w@/!)"
-                  "|" "DONE(d!)" "✘ KILL(k!)" "➰ PASS(p@/!)")))
+      '((sequence "TODO(t)" "NEXT(n/)" "IN-PROGRESS(i!)" "WAIT(w@/!)"
+                  "|" "DONE(d!)" "KILL(k!)" "PASS(p@/!)")))
 
 (setq org-log-done 'time)
 
@@ -202,7 +206,7 @@
 :PROPERTIES:
 :Customer Name: %^{Customer}
 :Deadline: %^{dd-mm-yyyy}
-:END"
+:END:"
   "Template for capturing project details.")
 
 (defvar core-orgmode-expenses-template
@@ -220,7 +224,7 @@
 :PROPERTIES:
 :QUOTE: %^{great quote}
 :ATTRIBUTION: %?
-:END"
+:END:"
   "Template for capturing notable quotes.")
 
 (setq org-capture-templates
@@ -363,6 +367,30 @@
                   org-code org-verbatim org-formula
                   org-date org-special-keyword org-priority org-tag))
     (add-to-list 'mixed-pitch-fixed-pitch-faces face)))
+
+
+;;;; ============================================================
+;;;; Org-modern
+;;;; ============================================================
+
+(use-package org-modern
+  :after org
+  :hook ((org-mode . org-modern-mode)
+         (org-agenda-finalize . org-modern-agenda)))
+
+;;;; ============================================================
+;;;; Valign
+;;;;
+;;;; Visual alignment/wrapping for org tables (handles
+;;;; proportional-width text and CJK/emoji width correctly;
+;;;; needed since mixed-pitch is active in org-mode buffers)
+;;;; ============================================================
+
+(use-package valign
+  :after org
+  :hook (org-mode . valign-mode)
+  :config
+  (setq valign-fancy-bar t))
 
 ;;;; ============================================================
 ;;;; Calendar — Kalgoorlie, Western Australia
