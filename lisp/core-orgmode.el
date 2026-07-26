@@ -42,6 +42,11 @@
 (setq org-clock-persist 'history)
 (org-clock-persistence-insinuate)
 
+;; global-visual-line-mode (core-settings.el) soft-wraps every line at the
+;; window edge, including table rows — this breaks column alignment and
+;; overrides the <N> width-cookie truncation. Disable it for Org buffers only.
+(add-hook 'org-mode-hook (lambda () (visual-line-mode -1)))
+
 ;;;; ============================================================
 ;;;; Keybindings
 ;;;; ============================================================
