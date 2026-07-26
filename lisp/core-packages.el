@@ -5,7 +5,7 @@
 ;; Author: Cooper Oscarfono <cooper@oscarfono.com>
 ;; Maintainer: Cooper Oscarfono <cooper@oscarfono.com>
 ;; Created: March 19, 2025
-;; Last Modified: March 15, 2026
+;; Last Modified: July 26, 2026
 ;; Keywords: lisp, packages, configuration
 ;; Package-Requires: ((emacs "29.1"))
 
@@ -29,6 +29,10 @@
 ;;   - major-mode-remap-alist (must be set before any file opens)
 ;;   - company (global-company-mode needs to be active immediately)
 ;;   - helm (helm-mode must be active for M-x override to work)
+;;
+;; CHANGES (2026-07-26):
+;;   - Helm to now load on startup to ensure correct switch-to-buffer behaviour
+;;   - Added minor mode display to doom modeline
 ;;
 ;; CHANGES (2026-03-15):
 ;;   - Added org-contacts (was called in capture template but never installed).
@@ -208,6 +212,7 @@
   :config
   (setq doom-modeline-icon t
         doom-modeline-major-mode-icon t
+        doom-modeline-minor-modes t
         doom-modeline-buffer-file-name-style 'truncate-upto-project))
 
 (use-package rainbow-mode
@@ -343,6 +348,7 @@ Requires gcc and git on PATH."
                 (treesit-parser-create 'rust)))))
 
 (use-package helm
+  :demand t
   :bind (("C-c h" . helm-mini)
          ("M-x"   . helm-M-x))
   :config

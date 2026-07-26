@@ -60,7 +60,7 @@
 ;;;; ============================================================
 
 (setq org-agenda-files (list "~/Documents/org/capture/todo.org"
-                              "~/Documents/org/capture/contacts.org"))
+                             "~/Documents/org/capture/contacts.org"))
 
 (setq org-highest-priority ?A
       org-lowest-priority  ?E
