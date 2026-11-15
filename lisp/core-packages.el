@@ -172,20 +172,33 @@
   :defer t
   :hook (org-mode . org-bullets-mode))
 
-(use-package org-brain
+;; org-roam: a network of notes. Each note is one org file in
+;; `org-roam-directory', and an id: link connects two notes.
+;; The bindings are global, so you can find or capture a note from any buffer.
+(use-package org-roam
   :defer t
-  :commands (org-brain-visualize org-brain-prefix-map)
   :init
-  (setq org-brain-path "~/Documents/brain")
-  :bind (:map org-mode-map
-         ("C-c b" . org-brain-prefix-map))
+  (setq org-roam-directory (file-truename "~/Documents/roam"))
+  (make-directory org-roam-directory t)
+  :bind (("C-c n f" . org-roam-node-find)
+         ("C-c n i" . org-roam-node-insert)
+         ("C-c n c" . org-roam-capture)
+         ("C-c n l" . org-roam-buffer-toggle)
+         ("C-c n d" . org-roam-dailies-goto-today))
   :config
-  (setq org-id-track-globally t
-        org-id-locations-file "~/.emacs.d/.org-id-locations")
-  (add-hook 'org-mode-hook
-            (lambda ()
-              (add-hook 'before-save-hook
-                        #'org-brain-ensure-ids-in-buffer nil t))))
+  ;; The database follows the changes to the notes on each save.
+  (org-roam-db-autosync-mode 1))
+
+;; org-roam-ui: shows the network of notes as a live graph in the browser.
+;; The graph is at http://127.0.0.1:35901 when the mode is on.
+(use-package org-roam-ui
+  :commands org-roam-ui-mode
+  :bind ("C-c n g" . org-roam-ui-mode)
+  :config
+  (setq org-roam-ui-sync-theme t
+        org-roam-ui-follow t
+        org-roam-ui-update-on-save t
+        org-roam-ui-open-on-start t))
 
 (use-package gnuplot
   :defer t

@@ -161,7 +161,12 @@ The =-a ""= flag starts a new daemon if one isn't running.
 | =C-c l=     | Store link                     |
 | =C-c a=     | Open agenda                    |
 | =C-c c=     | Capture                        |
-| =C-c b=     | Org-brain prefix               |
+| =C-c n f=   | Find or create a roam note     |
+| =C-c n i=   | Insert a link to a roam note   |
+| =C-c n c=   | Capture a roam note            |
+| =C-c n l=   | Toggle the backlinks buffer    |
+| =C-c n d=   | Open today's daily note        |
+| =C-c n g=   | Toggle the browser graph       |
 
 ** Org Skeletons (=C-c S=)
 
@@ -222,7 +227,8 @@ M-x melancholy-check-fonts
 | rustic         | Rust — cargo, clippy, rust-analyzer          |
 | flycheck       | On-the-fly syntax checking                   |
 | org-mode       | Notes, agenda, capture, export, babel        |
-| org-brain      | Mind-mapping and knowledge graph             |
+| org-roam       | Linked notes and a knowledge graph           |
+| org-roam-ui    | The note graph, live in the browser          |
 | aidermacs      | AI coding assistant via aider                |
 | multi-term     | Multiple terminal buffers                    |
 | elfeed         | RSS/Atom feed reader                         |
