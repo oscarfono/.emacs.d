@@ -181,7 +181,7 @@
 (use-package org-roam
   :defer t
   :init
-  (setq org-roam-directory (file-truename "~/Documents/roam"))
+  (setq org-roam-directory (file-truename "~/org/luna/roam"))
   (make-directory org-roam-directory t)
   :bind (("C-c n f" . org-roam-node-find)
          ("C-c n i" . org-roam-node-insert)
