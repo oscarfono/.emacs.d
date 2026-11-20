@@ -13,11 +13,12 @@
 ;;; Commentary:
 ;;
 ;; Configuration for ERC, Emacs' built-in IRC client.
-;; Credentials are read from ~/.authinfo.gpg — no plaintext passwords here.
+;; Credentials are read from auth-sources (~/.shh/.authinfo.gpg, set in
+;; early-init.el) — no plaintext passwords here.
 ;;
 ;; Usage: M-x erc (or C-c e from anywhere)
 ;;
-;; To add a server entry to ~/.authinfo.gpg:
+;; To add a server entry to ~/.shh/.authinfo.gpg:
 ;;   machine irc.libera.chat login <nick> password <pass> port 6697
 
 ;;; Code:
@@ -44,7 +45,7 @@
 (setq erc-server "irc.libera.chat"
       erc-port 6697)
 
-;; Read password from ~/.authinfo.gpg rather than prompting.
+;; Read password from auth-sources rather than prompting.
 (setq erc-prompt-for-password nil)
 (setq erc-prompt-for-nickserv-password nil)
 
@@ -103,7 +104,7 @@
 ;;;; ============================================================
 
 (defun core-erc-connect ()
-  "Connect to IRC via ERC using credentials from ~/.authinfo.gpg."
+  "Connect to IRC via ERC using credentials from `auth-sources'."
   (interactive)
   (erc-tls :server erc-server
            :port erc-port

@@ -22,6 +22,7 @@
 ;;   core-packages — third-party packages via straight.el
 ;;   core-orgmode  — Org-mode configuration
 ;;   core-erc      — ERC (IRC client) configuration
+;;   core-matrix   — ement.el (Matrix client) for LUNA
 ;;
 ;; CHANGES (2026-03-13):
 ;;   - Removed core-keybindings (bindings distributed to owning modules).
@@ -37,6 +38,7 @@
 (require 'core-packages)
 (require 'core-orgmode)
 (require 'core-erc)
+(require 'core-matrix)
 
 (provide 'init)
 

@@ -1,0 +1,26 @@
+# -*- mode: snippet -*-
+# name: Config Module
+# key: cm
+# --
+;;; ${1:`(file-name-base (or (buffer-file-name) "core-name"))`}.el --- ${2:Description} -*- lexical-binding: t; -*-
+
+;; Copyright (C) `(format-time-string "%Y")` Cooper Oscarfono
+
+;; Author: Cooper Oscarfono <cooper@oscarfono.com>
+;; Maintainer: Cooper Oscarfono <cooper@oscarfono.com>
+;; Created: `(format-time-string "%B %-d, %Y")`
+;; Keywords: ${3:convenience}
+;; Package-Requires: ((emacs "29.1"))
+
+;; This file is not part of GNU Emacs.
+
+;;; Commentary:
+;;
+;; ${4:What this module configures.}
+
+;;; Code:
+
+$0
+
+(provide '$1)
+;;; $1.el ends here

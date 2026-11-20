@@ -76,7 +76,11 @@
 ;;;; Agenda customization
 ;;;; ============================================================
 
-(setq org-agenda-include-diary t
+;; No diary file exists, so the diary adds nothing to the agenda. With the
+;; diary on, the agenda reads it once for each day in the span, and a
+;; fortnight span printed "Preparing diary...done" 14 times at startup.
+;; For holidays in the agenda, put %%(org-calendar-holiday) in an Org file.
+(setq org-agenda-include-diary nil
       org-agenda-window-setup 'current-window
       org-deadline-warning-days 14
       org-agenda-span 'fortnight

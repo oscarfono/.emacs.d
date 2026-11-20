@@ -138,8 +138,11 @@
   :config
   (yas-reload-all))
 
-(use-package yasnippet-classic-snippets :defer t)
-(use-package yasnippet-snippets         :defer t)
+;; yasnippet-snippets only. yasnippet-classic-snippets is the old set that
+;; yasnippet-snippets replaced. The classic set defines "format" twice, and
+;; it overlaps yasnippet-snippets, so each load warned "Multiple snippets
+;; with same identity".
+(use-package yasnippet-snippets :defer t)
 
 (use-package company
   :bind (:map company-active-map
