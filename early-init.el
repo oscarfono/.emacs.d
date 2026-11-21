@@ -95,6 +95,9 @@
                    :depth 1)
   :ensure t)
 
+;;;; Keep warnings silent and where they belong, in the Warnings buffer
+(setq native-comp-async-report-warnings-errors 'silent)
+
 (provide 'early-init)
 
 ;;; early-init.el ends here
