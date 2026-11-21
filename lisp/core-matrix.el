@@ -13,7 +13,12 @@
 ;;; Commentary:
 ;;
 ;; Configuration for ement.el, a Matrix client.  The homeserver is the
-;; LUNA VPS, on the tailnet only.  The design is in nyx/luna/LUNA.org.
+;; LUNA VPS, on the tailnet only.
+;;
+;; The host name is private, so this public file does not hold it.
+;; Set it in ~/.emacs.d/local.el, which git ignores.  init.el loads
+;; local.el before this module:
+;;   (setq core-matrix-host "luna.<tailnet>.ts.net")
 ;;
 ;; The password comes from auth-sources: ~/.shh/.authinfo.gpg, set in
 ;; early-init.el.  This file has no password.
@@ -34,11 +39,16 @@
 ;;;; Identity
 ;;;; ============================================================
 
-(defconst core-matrix-host "luna.<tailnet>.ts.net"
-  "The LUNA homeserver.  Tailscale must be up to reach it.")
+(defvar core-matrix-host nil
+  "The LUNA homeserver, for example \"luna.<tailnet>.ts.net\".
+Set it in local.el.  Tailscale must be up to reach it.")
 
-(defconst core-matrix-user-id (concat "@coops:" core-matrix-host)
-  "The Matrix user ID of the owner.")
+(defun core-matrix-user-id ()
+  "The Matrix user ID of the owner."
+  (unless core-matrix-host
+    (user-error "Set `core-matrix-host' in %s"
+                (expand-file-name "local.el" user-emacs-directory)))
+  (concat "@coops:" core-matrix-host))
 
 ;;;; ============================================================
 ;;;; Package
@@ -62,12 +72,13 @@
   "Connect to the LUNA homeserver with the password from `auth-sources'."
   (interactive)
   (require 'ement)
-  (let ((password (auth-source-pick-first-password
-                   :host core-matrix-host
-                   :user core-matrix-user-id)))
+  (let* ((user-id (core-matrix-user-id))
+         (password (auth-source-pick-first-password
+                    :host core-matrix-host
+                    :user user-id)))
     (unless password
-      (user-error "No password for %s in %s" core-matrix-user-id auth-sources))
-    (ement-connect :user-id core-matrix-user-id
+      (user-error "No password for %s in %s" user-id auth-sources))
+    (ement-connect :user-id user-id
                    :password password
                    :uri-prefix (concat "https://" core-matrix-host))))
 

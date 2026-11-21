@@ -32,6 +32,9 @@
 ;;; Code:
 
 (add-to-list 'load-path (expand-file-name "lisp" user-emacs-directory))
+;; Private settings of this machine (host names, for example).  git
+;; ignores local.el, so the values never go into this public repository.
+(load (expand-file-name "local.el" user-emacs-directory) t t)
 
 (require 'core-theme)
 (require 'core-settings)

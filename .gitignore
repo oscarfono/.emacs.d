@@ -98,3 +98,17 @@ Desktop.ini
 # ============================================================
 # abbrev_defs is written by Emacs automatically; not useful to track
 abbrev_defs
+
+# ============================================================
+# Private and personal data
+# ============================================================
+# Private settings of this machine. Refer to init.el.
+/local.el
+# A copy of the org-roam brain. Never public.
+org-roam.db
+org-roam.db-*
+# Bookmarks, feeds and the native-comp cache of this machine.
+bookmarks.eld
+/elfeed/
+/eln-cache/
+/tree-sitter
