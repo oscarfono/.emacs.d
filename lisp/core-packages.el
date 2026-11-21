@@ -178,10 +178,23 @@
 ;; org-roam: a network of notes. Each note is one org file in
 ;; `org-roam-directory', and an id: link connects two notes.
 ;; The bindings are global, so you can find or capture a note from any buffer.
+;;
+;; ~/org/brains is a folder of links, made by the LUNA memory-sync module:
+;; luna -> the base brain (~/org/luna/roam), and one link to the brain/ of
+;; each project. org-roam follows the links, and an id: link works from one
+;; brain to another. A new note and a daily note go into the base brain
+;; (luna/), because a file at the top of the folder is in no brain and does
+;; not go to the hub. Move a note into the brain of a project when it
+;; belongs there.
 (use-package org-roam
   :defer t
   :init
-  (setq org-roam-directory (file-truename "~/org/luna/roam"))
+  (setq org-roam-directory (file-truename "~/org/brains"))
+  (setq org-roam-dailies-directory "luna/daily/")
+  (setq org-roam-capture-templates
+        '(("d" "default" plain "%?"
+           :target (file+head "luna/%<%Y%m%d%H%M%S>-${slug}.org" "#+title: ${title}\n")
+           :unnarrowed t)))
   (make-directory org-roam-directory t)
   :bind (("C-c n f" . org-roam-node-find)
          ("C-c n i" . org-roam-node-insert)
