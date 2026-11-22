@@ -56,6 +56,21 @@
      (:name "cull"      :query "tag:cull" :key "c")
      (:name "all mail"  :query "*" :key "*"))))
 
+;; The register of documents (docs/YYYY.org in the LUNA memory) has two
+;; kinds of link: notmuch:id:... opens the mail, and docs:YYYY/MM/FILE
+;; opens the file in the document store on the VPS, through TRAMP.
+(use-package ol-notmuch
+  :straight t
+  :after (org notmuch))
+
+(defvar core-mail-docs-root "/ssh:coops@luna:/var/lib/luna/docs/"
+  "The document store of LUNA, as a TRAMP path.")
+
+(with-eval-after-load 'ol
+  (org-link-set-parameters
+   "docs"
+   :follow (lambda (path _) (find-file (concat core-mail-docs-root path)))))
+
 (provide 'core-mail)
 
 ;;; core-mail.el ends here
