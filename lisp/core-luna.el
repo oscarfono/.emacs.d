@@ -49,6 +49,9 @@
   "Open the notmuch query of INFO, from a link of the LUNA dashboard."
   (let ((query (core-luna--value info :query)))
     (when query
+      ;; core-mail gives the load path of notmuch and the command luna-notmuch.
+      ;; A daemon that started before core-mail existed does not have them.
+      (require 'core-mail)
       (require 'notmuch)
       (if (string-match-p "\\`\\(thread\\|id\\):[^ ]+\\'" query)
           (notmuch-show query)
