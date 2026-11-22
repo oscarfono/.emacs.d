@@ -43,6 +43,7 @@
 (require 'core-erc)
 (require 'core-matrix)
 (require 'core-mail)
+(require 'core-luna)
 
 (provide 'init)
 

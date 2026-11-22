@@ -82,7 +82,8 @@ machine irc.libera.chat login oscarfono password <pass> port 6697
 │   ├── core-orgmode.el    Org-mode: agenda, capture, export, babel
 │   ├── core-erc.el        ERC IRC client
 │   ├── core-matrix.el     Matrix client (ement.el) for LUNA
-│   └── core-mail.el       notmuch over SSH: the mail on LUNA
+│   ├── core-mail.el       notmuch over SSH: the mail on LUNA
+│   └── core-luna.el       org-protocol links from the LUNA dashboard
 ├── lib/
 │   └── plantuml.jar       PlantUML for org-babel diagrams
 ├── sauce/
@@ -90,7 +91,7 @@ machine irc.libera.chat login oscarfono password <pass> port 6697
 └── snippets/              YASnippet snippet files
 #+end_example
 
-Load order: =core-theme= → =core-settings= → =core-packages= → =core-orgmode= → =core-erc= → =core-matrix= → =core-mail=
+Load order: =core-theme= → =core-settings= → =core-packages= → =core-orgmode= → =core-erc= → =core-matrix= → =core-mail= → =core-luna=
 
 * Emacs Server
 
