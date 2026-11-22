@@ -42,6 +42,7 @@
 (require 'core-orgmode)
 (require 'core-erc)
 (require 'core-matrix)
+(require 'core-mail)
 
 (provide 'init)
 
